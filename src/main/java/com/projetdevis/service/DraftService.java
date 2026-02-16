@@ -499,6 +499,9 @@ public class DraftService {
     /**
      * Vérifie le budget et génère les alertes appropriées.
      */
+    /** Seuil de dépassement de budget pour rejet automatique (%) */
+    private static final double BUDGET_OVERRUN_REJECTION_THRESHOLD = 30.0;
+
     private void checkBudget(DraftQuote draft, AnalyzedInfo analysis) {
         if (!analysis.hasBudget()) {
             draft.addRecommendation("Budget client non spécifié - Proposer plusieurs options de gamme");
@@ -514,15 +517,30 @@ public class DraftService {
         if (totalHT != null) {
             double delta = budget - totalHT;
             double deltaPercent = (delta / budget) * 100;
+            double overrunPercent = Math.abs(deltaPercent);
 
             if (delta < 0) {
-                // Dépassement
-                draft.addWarning(String.format(
-                    "Dépassement du budget de %.2f € (%.0f%% au-dessus)",
-                    Math.abs(delta), Math.abs(deltaPercent)
-                ));
-                draft.addRequiredAction("Proposer des alternatives moins coûteuses");
-                draft.addRecommendation("Envisager la gamme économique pour certains articles");
+                // Dépassement du budget
+                if (overrunPercent > BUDGET_OVERRUN_REJECTION_THRESHOLD) {
+                    // Dépassement MAJEUR (> 30%) → REJET automatique
+                    draft.setStatus(DraftQuote.DraftStatus.REJETE);
+                    draft.addInconsistency(String.format(
+                        "[MAJEURE] Dépassement de budget critique : %.0f%% au-dessus du budget client (%.0f € vs %.0f €)",
+                        overrunPercent, totalHT, budget
+                    ));
+                    draft.addWarning(String.format(
+                        "Devis rejeté automatiquement - Dépassement de %.2f € (%.0f%% > seuil de %.0f%%)",
+                        Math.abs(delta), overrunPercent, BUDGET_OVERRUN_REJECTION_THRESHOLD
+                    ));
+                } else {
+                    // Dépassement modéré → avertissement
+                    draft.addWarning(String.format(
+                        "Dépassement du budget de %.2f € (%.0f%% au-dessus)",
+                        Math.abs(delta), overrunPercent
+                    ));
+                    draft.addRequiredAction("Proposer des alternatives moins coûteuses");
+                    draft.addRecommendation("Envisager la gamme économique pour certains articles");
+                }
             } else if (deltaPercent < 10) {
                 // Proche du budget
                 draft.addRecommendation("Budget serré - Peu de marge pour les options");

@@ -58,6 +58,9 @@ public class AnalyzedInfo {
     /** Liste des incohérences détectées */
     private List<String> inconsistencies;
 
+    /** Liste des incohérences MAJEURES (bloquantes) */
+    private List<String> majorInconsistencies;
+
     /** Liste des avertissements globaux */
     private List<String> warnings;
 
@@ -101,6 +104,7 @@ public class AnalyzedInfo {
         this.items = new ArrayList<>();
         this.notes = new ArrayList<>();
         this.inconsistencies = new ArrayList<>();
+        this.majorInconsistencies = new ArrayList<>();
         this.warnings = new ArrayList<>();
         this.confidence = 0.0;
         this.budgetHT = true;
@@ -217,6 +221,38 @@ public class AnalyzedInfo {
         }
     }
 
+    /**
+     * Retourne la liste des incohérences majeures (bloquantes).
+     *
+     * @return Liste des incohérences majeures
+     */
+    public List<String> getMajorInconsistencies() {
+        return majorInconsistencies;
+    }
+
+    /**
+     * Ajoute une incohérence MAJEURE (bloquante).
+     * Les incohérences majeures empêchent le pipeline de continuer.
+     *
+     * @param inconsistency Description de l'incohérence majeure
+     */
+    public void addMajorInconsistency(String inconsistency) {
+        if (inconsistency != null && !inconsistency.isBlank()) {
+            this.majorInconsistencies.add("[MAJEURE] " + inconsistency);
+            // Ajouter aussi aux incohérences normales pour le rapport
+            this.inconsistencies.add("[MAJEURE] " + inconsistency);
+        }
+    }
+
+    /**
+     * Vérifie s'il y a des incohérences majeures.
+     *
+     * @return true s'il y a au moins une incohérence majeure
+     */
+    public boolean hasMajorInconsistency() {
+        return !majorInconsistencies.isEmpty();
+    }
+
     public List<String> getWarnings() {
         return warnings;
     }
@@ -330,7 +366,8 @@ public class AnalyzedInfo {
      * Une analyse est fiable si :
      * - Au moins un article valide
      * - Confiance >= 0.5
-     * - Pas d'incohérences critiques
+     * - Pas d'incohérences majeures
+     * - Pas plus de 2 incohérences mineures
      *
      * @return true si l'analyse est fiable
      */
@@ -338,6 +375,7 @@ public class AnalyzedInfo {
         return hasItems() &&
                getValidItems().size() > 0 &&
                confidence >= 0.5 &&
+               !hasMajorInconsistency() &&
                inconsistencies.size() <= 2;
     }
 

@@ -821,57 +821,116 @@ public class AnalysisService {
 
     // === 9. DÉTECTION INCOHÉRENCES ===
 
+    /** Mots-clés indiquant des produits premium/haut de gamme */
+    private static final List<String> PREMIUM_KEYWORDS = Arrays.asList(
+        "direction", "haut de gamme", "premium", "luxe", "design",
+        "cuir", "bois massif", "executive", "prestige"
+    );
+
     /**
      * Détecte les incohérences dans les données analysées.
+     * Les incohérences MAJEURES bloquent le pipeline.
      *
      * @param analyzed Données à vérifier
      */
     private void detectInconsistencies(AnalyzedInfo analyzed) {
-        // Aucun article valide
+        // ══════════════════════════════════════════════════════════════
+        // INCOHÉRENCES MAJEURES (bloquantes)
+        // ══════════════════════════════════════════════════════════════
+
+        // 1. Aucun article valide
         if (!analyzed.hasItems()) {
-            analyzed.addInconsistency("Aucun article valide détecté");
+            analyzed.addMajorInconsistency("Aucun article valide détecté");
         }
 
-        // Articles sans quantité
-        long itemsWithoutQty = analyzed.getItems().stream()
-            .filter(i -> i.getQuantity() == null)
-            .count();
-        if (itemsWithoutQty > 0) {
-            analyzed.addWarning(itemsWithoutQty + " article(s) sans quantité spécifiée");
-        }
+        // 2. Articles sans quantité exploitable (quantités floues)
+        if (analyzed.hasItems()) {
+            long itemsWithoutQty = analyzed.getItems().stream()
+                .filter(i -> i.getQuantity() == null || i.getQuantity() <= 0)
+                .count();
+            long totalItems = analyzed.getItems().size();
 
-        // Articles en catégorie "Autre"
-        long uncategorized = analyzed.getItems().stream()
-            .filter(i -> i.getCategory() == AnalyzedItem.Category.AUTRE)
-            .count();
-        if (uncategorized > 0) {
-            analyzed.addWarning(uncategorized + " article(s) non catégorisé(s)");
-        }
-
-        // Budget sans articles
-        if (analyzed.hasBudget() && !analyzed.hasItems()) {
-            analyzed.addInconsistency("Budget spécifié mais aucun article détecté");
-        }
-
-        // Date urgente mais urgence "normal"
-        if (analyzed.hasDeliveryDate() && analyzed.getDeliveryDate() != null) {
-            long daysUntil = java.time.temporal.ChronoUnit.DAYS.between(LocalDate.now(), analyzed.getDeliveryDate());
-            if (daysUntil <= 7 && "normal".equals(analyzed.getUrgency())) {
-                analyzed.addWarning("Délai court (" + daysUntil + " jours) mais urgence marquée 'normal'");
+            // Si plus de 50% des articles n'ont pas de quantité → MAJEURE
+            if (totalItems > 0 && (double) itemsWithoutQty / totalItems > 0.5) {
+                analyzed.addMajorInconsistency(String.format(
+                    "Quantités non exploitables : %d/%d articles sans quantité valide",
+                    itemsWithoutQty, totalItems
+                ));
+            } else if (itemsWithoutQty > 0) {
+                analyzed.addWarning(itemsWithoutQty + " article(s) sans quantité spécifiée");
             }
         }
 
-        // Quantité totale vs budget (cohérence approximative)
+        // 3. Budget irréaliste par rapport à la quantité
         if (analyzed.hasBudget() && analyzed.hasItems()) {
             int totalQty = analyzed.getTotalQuantity();
             double budget = analyzed.getBudget();
             double pricePerUnit = budget / Math.max(1, totalQty);
 
-            if (pricePerUnit < 10) {
-                analyzed.addWarning("Prix unitaire moyen très bas: " + String.format("%.2f€", pricePerUnit));
-            } else if (pricePerUnit > 10000) {
+            // Vérifier si des articles sont premium/haut de gamme
+            boolean hasPremiumItems = analyzed.getItems().stream()
+                .anyMatch(item -> {
+                    String product = item.getProduct() != null ? item.getProduct().toLowerCase() : "";
+                    String material = item.getMaterial() != null ? item.getMaterial().toLowerCase() : "";
+                    return PREMIUM_KEYWORDS.stream()
+                        .anyMatch(kw -> product.contains(kw) || material.contains(kw));
+                });
+
+            // Prix unitaire < 20€ pour du mobilier = irréaliste → MAJEURE
+            if (pricePerUnit < 20) {
+                analyzed.addMajorInconsistency(String.format(
+                    "Budget irréaliste : %.2f€ par unité pour %d articles de mobilier",
+                    pricePerUnit, totalQty
+                ));
+            }
+            // Articles premium mais prix < 100€/unité → MAJEURE
+            else if (pricePerUnit < 100 && hasPremiumItems) {
+                analyzed.addMajorInconsistency(String.format(
+                    "Contradiction : articles premium/haut de gamme avec budget de %.2f€ par unité",
+                    pricePerUnit
+                ));
+            }
+            // Prix très élevé = avertissement
+            else if (pricePerUnit > 10000) {
                 analyzed.addWarning("Prix unitaire moyen très élevé: " + String.format("%.2f€", pricePerUnit));
             }
+        }
+
+        // 4. Urgence contradictoire avec date lointaine (> 6 mois)
+        if (analyzed.hasDeliveryDate() && analyzed.getDeliveryDate() != null) {
+            long daysUntil = java.time.temporal.ChronoUnit.DAYS.between(
+                LocalDate.now(), analyzed.getDeliveryDate());
+            String urgency = analyzed.getUrgency();
+
+            if (daysUntil > 180 && ("urgent".equals(urgency) || "très urgent".equals(urgency))) {
+                analyzed.addMajorInconsistency(String.format(
+                    "Contradiction : urgence '%s' déclarée mais livraison dans %d jours (%.1f mois)",
+                    urgency, daysUntil, daysUntil / 30.0
+                ));
+            }
+            // Date très proche mais urgence normale = avertissement
+            else if (daysUntil <= 7 && "normal".equals(urgency)) {
+                analyzed.addWarning("Délai court (" + daysUntil + " jours) mais urgence marquée 'normal'");
+            }
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        // INCOHÉRENCES MINEURES (avertissements)
+        // ══════════════════════════════════════════════════════════════
+
+        // Articles en catégorie "Autre"
+        if (analyzed.hasItems()) {
+            long uncategorized = analyzed.getItems().stream()
+                .filter(i -> i.getCategory() == AnalyzedItem.Category.AUTRE)
+                .count();
+            if (uncategorized > 0) {
+                analyzed.addWarning(uncategorized + " article(s) non catégorisé(s)");
+            }
+        }
+
+        // Budget sans articles
+        if (analyzed.hasBudget() && !analyzed.hasItems()) {
+            analyzed.addInconsistency("Budget spécifié mais aucun article détecté");
         }
     }
 
