@@ -10,7 +10,9 @@ import java.util.List;
  * Pipeline : signature -> replies -> images -> phrases inutiles -> extraction
  */
 public class EmailCleanerService {
-     private final OpenAiClient ai = new OpenAiClient();
+
+    // Client IA désactivé - utiliser EmailCleanerIA à la place pour le nettoyage par IA
+    // private final OpenAiClient ai = new OpenAiClient();
 
 
     // === PATTERNS REGEX ===
@@ -265,7 +267,7 @@ public class EmailCleanerService {
         String result = rawEmail;
 
         // Pipeline de nettoyage dans l'ordre
-        result = ai.retirerSignature(result);
+        result = removeSignature(result);
         result = removePreviousReplies(result);
         result = removeImages(result);
         result = removeUselessSentences(result);
