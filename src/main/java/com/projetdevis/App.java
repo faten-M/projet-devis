@@ -8,7 +8,7 @@ import com.projetdevis.service.*;
  *
  * Exécute les 6 étapes du pipeline pour chaque e-mail de test :
  * 1. Nettoyage de l'e-mail (EmailCleanerService)
- * 2. Extraction des informations (ExtractionService)
+ * 2. Extraction des informations (ExtractInfoIA.java)
  * 3. Analyse et classification (AnalysisService)
  * 4. Génération du devis brouillon JSON (DraftService)
  * 5. Validation humaine - simulation (ValidationService)

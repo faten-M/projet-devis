@@ -15,18 +15,11 @@
 
     <dependencies>
 
-        <!-- SDK OpenAI (inclut Gson en transitive) -->
+        <!-- SDK OpenAI 4.23.0 -->
         <dependency>
             <groupId>com.openai</groupId>
             <artifactId>openai-java</artifactId>
-            <version>1.0.0</version>
-        </dependency>
-
-        <!-- Gson explicite -->
-        <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-            <version>2.10.1</version>
+            <version>4.23.0</version>
         </dependency>
 
         <!-- JUnit 5 -->
@@ -57,6 +50,29 @@
                     <!-- Byte Buddy ne supporte pas encore JDK 25 officiellement -->
                     <argLine>-Dnet.bytebuddy.experimental=true</argLine>
                 </configuration>
+            </plugin>
+
+            <!-- Maven Shade Plugin pour créer un FAT JAR -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>com.projetdevis.App</mainClass>
+                                </transformer>
+                            </transformers>
+                            <finalName>app-with-dependencies</finalName>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
