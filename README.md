@@ -19,10 +19,21 @@ Le système doit extraire les informations pertinentes, identifier les données 
   - ambigus / incertains
 - Un score de confiance global (0–100)
 
-##  Structure du projet
-- `index.js` : point d’entrée du projet Node.js
-- `package.json` : configuration du projet
+## Technologies utilisées
+- Java 17  
+- Maven  
+- VS Code  
 
+## État actuel du projet
+- Migration depuis Node.js vers Java/Maven  
+- Structure Maven fonctionnelle  
+- Base prête pour implémenter la logique métier (extraction, analyse, génération de devis)
+
+## Prochaines étapes
+- Implémentation de l’analyse du texte  
+- Détection des champs manquants / ambigus  
+- Génération du JSON final  
+- Ajout de tests unitaires  
 
 
 
