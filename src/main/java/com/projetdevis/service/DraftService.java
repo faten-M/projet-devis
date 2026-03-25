@@ -4,6 +4,8 @@ import com.projetdevis.model.AnalyzedInfo;
 import com.projetdevis.model.AnalyzedItem;
 import com.projetdevis.model.DraftQuote;
 import com.projetdevis.model.QuoteItem;
+import com.projetdevis.repository.ProduitRepository;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -24,7 +26,33 @@ import java.util.*;
  * @author BMAD Pipeline - Étape 5
  * @version 1.0
  */
+@Service
 public class DraftService {
+
+    private final ProduitRepository produitRepository;
+
+    /** Constructeur Spring : injecte le repository catalogue. */
+    public DraftService(ProduitRepository produitRepository) {
+        this.produitRepository = produitRepository;
+    }
+
+    /** Constructeur standalone pour démos / tests (utilise les prix codés en dur). */
+    public DraftService() {
+        this.produitRepository = null;
+    }
+
+    /**
+     * Retourne les prix [économique, standard, premium] pour une catégorie.
+     * Essaie d'abord le catalogue en base, puis se replie sur PRICE_GRID.
+     */
+    private double[] getPricesForCategory(AnalyzedItem.Category category) {
+        if (produitRepository != null) {
+            return produitRepository.findFirstByCategorie(category)
+                .map(p -> new double[]{p.getPrixEconomique(), p.getPrixStandard(), p.getPrixPremium()})
+                .orElseGet(() -> PRICE_GRID.getOrDefault(category, PRICE_GRID.get(AnalyzedItem.Category.AUTRE)));
+        }
+        return PRICE_GRID.getOrDefault(category, PRICE_GRID.get(AnalyzedItem.Category.AUTRE));
+    }
 
     // === CONSTANTES ===
 
@@ -372,9 +400,8 @@ public class DraftService {
         QuoteItem.PriceRange priceRange = determinePriceRange(source);
         item.setPriceRange(priceRange);
 
-        // Récupération du prix de base
-        double[] prices = PRICE_GRID.getOrDefault(source.getCategory(),
-            PRICE_GRID.get(AnalyzedItem.Category.AUTRE));
+        // Récupération du prix de base depuis le catalogue (base de données)
+        double[] prices = getPricesForCategory(source.getCategory());
 
         double basePrice;
         double confidence;

@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import jakarta.persistence.*;
+
 /**
  * Représente une fiche client dans le système CRM.
  *
@@ -21,6 +23,8 @@ import java.util.Objects;
  * @author BMAD Pipeline - Étape 7
  * @version 1.0
  */
+@Entity
+@Table(name = "clients")
 public class Client {
 
     // === ÉNUMÉRATIONS ===
@@ -225,6 +229,7 @@ public class Client {
     // === ATTRIBUTS IDENTIFICATION ===
 
     /** Identifiant unique du client */
+    @Id
     private String clientId;
 
     /** Numéro de compte client */
@@ -247,13 +252,16 @@ public class Client {
 
     // === ATTRIBUTS COORDONNÉES ===
 
-    /** Adresse du siège */
+    /** Adresse du siège (non persistée — à compléter ultérieurement) */
+    @Transient
     private Adresse adresseSiege;
 
-    /** Adresse de facturation */
+    /** Adresse de facturation (non persistée) */
+    @Transient
     private Adresse adresseFacturation;
 
-    /** Adresse de livraison */
+    /** Adresse de livraison (non persistée) */
+    @Transient
     private Adresse adresseLivraison;
 
     /** Téléphone principal */
@@ -262,15 +270,18 @@ public class Client {
     /** Site web */
     private String siteWeb;
 
-    /** Liste des contacts */
+    /** Liste des contacts (non persistée — à compléter ultérieurement) */
+    @Transient
     private List<Contact> contacts;
 
     // === ATTRIBUTS COMMERCIAUX ===
 
     /** Segment client */
+    @Enumerated(EnumType.STRING)
     private Segment segment;
 
     /** Statut client */
+    @Enumerated(EnumType.STRING)
     private Status status;
 
     /** Commercial attitré */
@@ -309,9 +320,15 @@ public class Client {
     private int nombreCommandes;
 
     /** Liste des numéros de devis */
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "client_historique_devis", joinColumns = @JoinColumn(name = "client_id"))
+    @Column(name = "quote_number", length = 100)
     private List<String> historiqueDevis;
 
     /** Notes internes */
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "client_notes", joinColumns = @JoinColumn(name = "client_id"))
+    @Column(name = "note_text", length = 2000)
     private List<String> notes;
 
     // === ATTRIBUTS ORIGINE ===
