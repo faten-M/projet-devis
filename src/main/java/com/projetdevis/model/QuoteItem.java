@@ -198,6 +198,9 @@ public class QuoteItem {
             this.designation = buildDesignation(source);
             this.description = buildDescription(source);
             this.reference = generateReference(source, lineNumber);
+            if (source.getUnite() != null && !source.getUnite().isBlank()) {
+                this.unit = source.getUnite();
+            }
         }
     }
 
@@ -258,15 +261,16 @@ public class QuoteItem {
      */
     private String generateReference(AnalyzedItem item, int lineNum) {
         String catCode = switch (item.getCategory()) {
-            case BUREAU -> "BUR";
-            case SIEGE -> "SIG";
-            case RANGEMENT -> "RNG";
-            case TABLE -> "TAB";
-            case ECLAIRAGE -> "ECL";
-            case ACCESSOIRE -> "ACC";
-            case ESPACE_DETENTE -> "DET";
-            case CLOISON -> "CLO";
-            case AUTRE -> "DIV";
+            case GROS_OEUVRE   -> "GRO";
+            case SECOND_OEUVRE -> "SEC";
+            case COUVERTURE    -> "COV";
+            case CHARPENTE     -> "CHA";
+            case PLOMBERIE     -> "PLO";
+            case ELECTRICITE   -> "ELE";
+            case VRD           -> "VRD";
+            case ISOLATION     -> "ISO";
+            case FINITION      -> "FIN";
+            case AUTRE         -> "DIV";
         };
         return String.format("%s-%03d", catCode, lineNum);
     }

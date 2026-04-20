@@ -5,6 +5,7 @@ import com.projetdevis.model.AnalyzedInfo;
 import com.projetdevis.model.Client;
 import com.projetdevis.model.DraftQuote;
 import com.projetdevis.model.ExtractedInfo;
+import com.projetdevis.model.ItemRequest;
 import com.projetdevis.model.QuoteItem;
 import com.projetdevis.repository.ClientRepository;
 import com.projetdevis.repository.DraftQuoteRepository;
@@ -16,7 +17,10 @@ import java.util.Optional;
 
 /**
  * Service Spring orchestrant le pipeline de génération de devis :
- *   Nettoyage → Extraction → Analyse → Brouillon
+ *   Nettoyage → Extraction LLM → Analyse → Brouillon
+ *
+ * L'extraction des produits est intégralement déléguée au LLM via ExtractInfoIA.
+ * ExtractionService (regex) n'est plus utilisé dans ce pipeline.
  */
 @Service
 public class DevisPipelineService {
@@ -27,9 +31,8 @@ public class DevisPipelineService {
     private final DraftQuoteRepository quoteRepository;
     private final ClientRepository     clientRepository;
 
-    // ExtractionService est créé à la demande car il nécessite OPENAI_API_KEY.
-    // La création est différée pour donner un message d'erreur clair si la clé manque.
-    private ExtractionService extractionService;
+    // ExtractInfoIA est créé à la demande car il nécessite OPENAI_API_KEY.
+    private ExtractInfoIA extractInfoIA;
 
     public DevisPipelineService(DraftService draftService,
                                 DraftQuoteRepository quoteRepository,
@@ -39,11 +42,57 @@ public class DevisPipelineService {
         this.clientRepository  = clientRepository;
     }
 
-    private ExtractionService getExtractionService() {
-        if (extractionService == null) {
-            extractionService = new ExtractionService();
+    private ExtractInfoIA getExtractInfoIA() {
+        if (extractInfoIA == null) {
+            extractInfoIA = new ExtractInfoIA();
         }
-        return extractionService;
+        return extractInfoIA;
+    }
+
+    /**
+     * Convertit la sortie LLM ({@link ExtractInfoIA.ProductInfo}) en {@link ExtractedInfo}
+     * compatible avec la suite du pipeline.
+     *
+     * <p>Chaque produit renvoyé par le LLM est transformé en {@link ItemRequest} :
+     * <ul>
+     *   <li>le nom est conservé exactement tel que le LLM l'a extrait de l'e-mail ;</li>
+     *   <li>la quantité floue est convertie en entier via le parseur interne ;</li>
+     *   <li>les détails (couleur, matière…) sont conservés comme caractéristique libre.</li>
+     * </ul>
+     */
+    private ExtractedInfo buildExtractedInfo(String cleaned, ExtractInfoIA ia) {
+        ExtractedInfo info = new ExtractedInfo(cleaned);
+
+        List<ExtractInfoIA.ProductInfo> produits = ia.extractProductList(cleaned);
+
+        for (ExtractInfoIA.ProductInfo p : produits) {
+            if (p.nom() == null || p.nom().isBlank()) continue;
+
+            ItemRequest item = new ItemRequest();
+            item.setProduct(p.nom());
+
+            // Conversion de la quantité brute en entier via le parseur interne
+            int qty = 1;
+            try {
+                qty = ia.parseQuantity(p.quantite() != null && !p.quantite().isBlank()
+                        ? p.quantite() : "1");
+            } catch (Exception ignored) {}
+            item.setQuantity(qty);
+
+            // Unité de mesure (m², tonne, sac, ml…) transmise telle quelle
+            item.setUnite(p.unite());
+
+            // Les détails sont portés comme caractéristique libre (grade, norme, dimensions…)
+            if (p.details() != null && !p.details().isBlank()) {
+                item.addCharacteristic(p.details());
+            }
+
+            item.setRawLine(p.nom() + " × " + p.quantite() + " " + p.unite());
+            info.addItem(item);
+        }
+
+        info.setConfidence(produits.isEmpty() ? 0.0 : 0.7);
+        return info;
     }
 
     /**
@@ -57,8 +106,8 @@ public class DevisPipelineService {
         // Étape 1 — Nettoyage (pas d'IA, toujours disponible)
         String cleaned = cleanerService.clean(rawEmail);
 
-        // Étape 2 — Extraction (peut faire appel à l'IA pour les quantités humaines)
-        ExtractedInfo extracted = getExtractionService().extract(cleaned);
+        // Étape 2 — Extraction par le LLM uniquement (zéro regex, zéro mots-clés)
+        ExtractedInfo extracted = buildExtractedInfo(cleaned, getExtractInfoIA());
 
         // Étape 3 — Analyse et classification
         AnalyzedInfo analyzed = analysisService.analyze(extracted);

@@ -71,111 +71,132 @@ public class AnalysisService {
         "merci"
     );
 
-    /** Mots-clés de produits valides */
+    /** Mots-clés de produits — matériaux de construction */
     private static final Map<String, AnalyzedItem.Category> PRODUCT_CATEGORIES = new LinkedHashMap<>();
     static {
-        // Bureaux
-        PRODUCT_CATEGORIES.put("bureau", AnalyzedItem.Category.BUREAU);
-        PRODUCT_CATEGORIES.put("bureaux", AnalyzedItem.Category.BUREAU);
-        PRODUCT_CATEGORIES.put("poste de travail", AnalyzedItem.Category.BUREAU);
-        PRODUCT_CATEGORIES.put("postes de travail", AnalyzedItem.Category.BUREAU);
+        // Gros œuvre
+        PRODUCT_CATEGORIES.put("ciment",       AnalyzedItem.Category.GROS_OEUVRE);
+        PRODUCT_CATEGORIES.put("béton",        AnalyzedItem.Category.GROS_OEUVRE);
+        PRODUCT_CATEGORIES.put("beton",        AnalyzedItem.Category.GROS_OEUVRE);
+        PRODUCT_CATEGORIES.put("parpaing",     AnalyzedItem.Category.GROS_OEUVRE);
+        PRODUCT_CATEGORIES.put("agglo",        AnalyzedItem.Category.GROS_OEUVRE);
+        PRODUCT_CATEGORIES.put("brique",       AnalyzedItem.Category.GROS_OEUVRE);
+        PRODUCT_CATEGORIES.put("fer à béton",  AnalyzedItem.Category.GROS_OEUVRE);
+        PRODUCT_CATEGORIES.put("ferraillage",  AnalyzedItem.Category.GROS_OEUVRE);
+        PRODUCT_CATEGORIES.put("acier",        AnalyzedItem.Category.GROS_OEUVRE);
+        PRODUCT_CATEGORIES.put("sable",        AnalyzedItem.Category.GROS_OEUVRE);
+        PRODUCT_CATEGORIES.put("gravier",      AnalyzedItem.Category.GROS_OEUVRE);
+        PRODUCT_CATEGORIES.put("grave",        AnalyzedItem.Category.GROS_OEUVRE);
+        PRODUCT_CATEGORIES.put("mortier",      AnalyzedItem.Category.GROS_OEUVRE);
+        PRODUCT_CATEGORIES.put("chape",        AnalyzedItem.Category.GROS_OEUVRE);
+        PRODUCT_CATEGORIES.put("dalle",        AnalyzedItem.Category.GROS_OEUVRE);
+        PRODUCT_CATEGORIES.put("hourdis",      AnalyzedItem.Category.GROS_OEUVRE);
+        PRODUCT_CATEGORIES.put("poutrelle",    AnalyzedItem.Category.GROS_OEUVRE);
+        PRODUCT_CATEGORIES.put("treillis",     AnalyzedItem.Category.GROS_OEUVRE);
 
-        // Sièges
-        PRODUCT_CATEGORIES.put("chaise", AnalyzedItem.Category.SIEGE);
-        PRODUCT_CATEGORIES.put("chaises", AnalyzedItem.Category.SIEGE);
-        PRODUCT_CATEGORIES.put("fauteuil", AnalyzedItem.Category.SIEGE);
-        PRODUCT_CATEGORIES.put("fauteuils", AnalyzedItem.Category.SIEGE);
-        PRODUCT_CATEGORIES.put("siège", AnalyzedItem.Category.SIEGE);
-        PRODUCT_CATEGORIES.put("sièges", AnalyzedItem.Category.SIEGE);
-        PRODUCT_CATEGORIES.put("tabouret", AnalyzedItem.Category.SIEGE);
-        PRODUCT_CATEGORIES.put("tabourets", AnalyzedItem.Category.SIEGE);
+        // Second œuvre
+        PRODUCT_CATEGORIES.put("plâtre",           AnalyzedItem.Category.SECOND_OEUVRE);
+        PRODUCT_CATEGORIES.put("platre",           AnalyzedItem.Category.SECOND_OEUVRE);
+        PRODUCT_CATEGORIES.put("placo",            AnalyzedItem.Category.SECOND_OEUVRE);
+        PRODUCT_CATEGORIES.put("plaque de plâtre", AnalyzedItem.Category.SECOND_OEUVRE);
+        PRODUCT_CATEGORIES.put("cloison",          AnalyzedItem.Category.SECOND_OEUVRE);
+        PRODUCT_CATEGORIES.put("faux-plafond",     AnalyzedItem.Category.SECOND_OEUVRE);
+        PRODUCT_CATEGORIES.put("carreau de plâtre",AnalyzedItem.Category.SECOND_OEUVRE);
+        PRODUCT_CATEGORIES.put("ossature",         AnalyzedItem.Category.SECOND_OEUVRE);
 
-        // Tables
-        PRODUCT_CATEGORIES.put("table", AnalyzedItem.Category.TABLE);
-        PRODUCT_CATEGORIES.put("tables", AnalyzedItem.Category.TABLE);
-        PRODUCT_CATEGORIES.put("table de réunion", AnalyzedItem.Category.TABLE);
-        PRODUCT_CATEGORIES.put("table basse", AnalyzedItem.Category.TABLE);
-        PRODUCT_CATEGORIES.put("tables basses", AnalyzedItem.Category.TABLE);
+        // Couverture
+        PRODUCT_CATEGORIES.put("tuile",      AnalyzedItem.Category.COUVERTURE);
+        PRODUCT_CATEGORIES.put("ardoise",    AnalyzedItem.Category.COUVERTURE);
+        PRODUCT_CATEGORIES.put("zinc",       AnalyzedItem.Category.COUVERTURE);
+        PRODUCT_CATEGORIES.put("membrane",   AnalyzedItem.Category.COUVERTURE);
+        PRODUCT_CATEGORIES.put("toiture",    AnalyzedItem.Category.COUVERTURE);
+        PRODUCT_CATEGORIES.put("gouttière",  AnalyzedItem.Category.COUVERTURE);
+        PRODUCT_CATEGORIES.put("faîtière",   AnalyzedItem.Category.COUVERTURE);
+        PRODUCT_CATEGORIES.put("rive",       AnalyzedItem.Category.COUVERTURE);
 
-        // Rangement
-        PRODUCT_CATEGORIES.put("armoire", AnalyzedItem.Category.RANGEMENT);
-        PRODUCT_CATEGORIES.put("armoires", AnalyzedItem.Category.RANGEMENT);
-        PRODUCT_CATEGORIES.put("caisson", AnalyzedItem.Category.RANGEMENT);
-        PRODUCT_CATEGORIES.put("caissons", AnalyzedItem.Category.RANGEMENT);
-        PRODUCT_CATEGORIES.put("étagère", AnalyzedItem.Category.RANGEMENT);
-        PRODUCT_CATEGORIES.put("étagères", AnalyzedItem.Category.RANGEMENT);
-        PRODUCT_CATEGORIES.put("bibliothèque", AnalyzedItem.Category.RANGEMENT);
-        PRODUCT_CATEGORIES.put("rangement", AnalyzedItem.Category.RANGEMENT);
-        PRODUCT_CATEGORIES.put("tiroir", AnalyzedItem.Category.RANGEMENT);
-        PRODUCT_CATEGORIES.put("tiroirs", AnalyzedItem.Category.RANGEMENT);
+        // Charpente & Bois
+        PRODUCT_CATEGORIES.put("chevron",       AnalyzedItem.Category.CHARPENTE);
+        PRODUCT_CATEGORIES.put("poutre",        AnalyzedItem.Category.CHARPENTE);
+        PRODUCT_CATEGORIES.put("madrier",       AnalyzedItem.Category.CHARPENTE);
+        PRODUCT_CATEGORIES.put("lambris",       AnalyzedItem.Category.CHARPENTE);
+        PRODUCT_CATEGORIES.put("osb",           AnalyzedItem.Category.CHARPENTE);
+        PRODUCT_CATEGORIES.put("contreplaqué",  AnalyzedItem.Category.CHARPENTE);
+        PRODUCT_CATEGORIES.put("planche",       AnalyzedItem.Category.CHARPENTE);
+        PRODUCT_CATEGORIES.put("latte",         AnalyzedItem.Category.CHARPENTE);
+        PRODUCT_CATEGORIES.put("solive",        AnalyzedItem.Category.CHARPENTE);
 
-        // Éclairage
-        PRODUCT_CATEGORIES.put("lampe", AnalyzedItem.Category.ECLAIRAGE);
-        PRODUCT_CATEGORIES.put("lampes", AnalyzedItem.Category.ECLAIRAGE);
-        PRODUCT_CATEGORIES.put("luminaire", AnalyzedItem.Category.ECLAIRAGE);
-        PRODUCT_CATEGORIES.put("luminaires", AnalyzedItem.Category.ECLAIRAGE);
+        // Plomberie
+        PRODUCT_CATEGORIES.put("tuyau",    AnalyzedItem.Category.PLOMBERIE);
+        PRODUCT_CATEGORIES.put("tube",     AnalyzedItem.Category.PLOMBERIE);
+        PRODUCT_CATEGORIES.put("raccord",  AnalyzedItem.Category.PLOMBERIE);
+        PRODUCT_CATEGORIES.put("robinet",  AnalyzedItem.Category.PLOMBERIE);
+        PRODUCT_CATEGORIES.put("siphon",   AnalyzedItem.Category.PLOMBERIE);
+        PRODUCT_CATEGORIES.put("sanitaire",AnalyzedItem.Category.PLOMBERIE);
+        PRODUCT_CATEGORIES.put("lavabo",   AnalyzedItem.Category.PLOMBERIE);
+        PRODUCT_CATEGORIES.put("évier",    AnalyzedItem.Category.PLOMBERIE);
+        PRODUCT_CATEGORIES.put("douche",   AnalyzedItem.Category.PLOMBERIE);
+        PRODUCT_CATEGORIES.put("wc",       AnalyzedItem.Category.PLOMBERIE);
 
-        // Espace détente
-        PRODUCT_CATEGORIES.put("canapé", AnalyzedItem.Category.ESPACE_DETENTE);
-        PRODUCT_CATEGORIES.put("canapés", AnalyzedItem.Category.ESPACE_DETENTE);
-        PRODUCT_CATEGORIES.put("pouf", AnalyzedItem.Category.ESPACE_DETENTE);
-        PRODUCT_CATEGORIES.put("poufs", AnalyzedItem.Category.ESPACE_DETENTE);
-        PRODUCT_CATEGORIES.put("fauteuil lounge", AnalyzedItem.Category.ESPACE_DETENTE);
+        // Électricité
+        PRODUCT_CATEGORIES.put("câble",        AnalyzedItem.Category.ELECTRICITE);
+        PRODUCT_CATEGORIES.put("gaine",        AnalyzedItem.Category.ELECTRICITE);
+        PRODUCT_CATEGORIES.put("tableau",      AnalyzedItem.Category.ELECTRICITE);
+        PRODUCT_CATEGORIES.put("disjoncteur",  AnalyzedItem.Category.ELECTRICITE);
+        PRODUCT_CATEGORIES.put("prise",        AnalyzedItem.Category.ELECTRICITE);
+        PRODUCT_CATEGORIES.put("interrupteur", AnalyzedItem.Category.ELECTRICITE);
+        PRODUCT_CATEGORIES.put("luminaire",    AnalyzedItem.Category.ELECTRICITE);
 
-        // Cloisons
-        PRODUCT_CATEGORIES.put("cloison", AnalyzedItem.Category.CLOISON);
-        PRODUCT_CATEGORIES.put("cloisons", AnalyzedItem.Category.CLOISON);
-        PRODUCT_CATEGORIES.put("panneau", AnalyzedItem.Category.CLOISON);
-        PRODUCT_CATEGORIES.put("panneaux", AnalyzedItem.Category.CLOISON);
-        PRODUCT_CATEGORIES.put("séparateur", AnalyzedItem.Category.CLOISON);
+        // VRD
+        PRODUCT_CATEGORIES.put("bordure",     AnalyzedItem.Category.VRD);
+        PRODUCT_CATEGORIES.put("pavé",        AnalyzedItem.Category.VRD);
+        PRODUCT_CATEGORIES.put("caniveau",    AnalyzedItem.Category.VRD);
+        PRODUCT_CATEGORIES.put("regard",      AnalyzedItem.Category.VRD);
+        PRODUCT_CATEGORIES.put("canalisation",AnalyzedItem.Category.VRD);
+        PRODUCT_CATEGORIES.put("dalette",     AnalyzedItem.Category.VRD);
+        PRODUCT_CATEGORIES.put("bitume",      AnalyzedItem.Category.VRD);
+        PRODUCT_CATEGORIES.put("enrobé",      AnalyzedItem.Category.VRD);
+
+        // Isolation
+        PRODUCT_CATEGORIES.put("isolant",       AnalyzedItem.Category.ISOLATION);
+        PRODUCT_CATEGORIES.put("laine de verre",AnalyzedItem.Category.ISOLATION);
+        PRODUCT_CATEGORIES.put("laine de roche",AnalyzedItem.Category.ISOLATION);
+        PRODUCT_CATEGORIES.put("polystyrène",   AnalyzedItem.Category.ISOLATION);
+        PRODUCT_CATEGORIES.put("pare-vapeur",   AnalyzedItem.Category.ISOLATION);
+        PRODUCT_CATEGORIES.put("liège",         AnalyzedItem.Category.ISOLATION);
+        PRODUCT_CATEGORIES.put("ouate",         AnalyzedItem.Category.ISOLATION);
+
+        // Finition
+        PRODUCT_CATEGORIES.put("peinture",    AnalyzedItem.Category.FINITION);
+        PRODUCT_CATEGORIES.put("carrelage",   AnalyzedItem.Category.FINITION);
+        PRODUCT_CATEGORIES.put("enduit",      AnalyzedItem.Category.FINITION);
+        PRODUCT_CATEGORIES.put("parquet",     AnalyzedItem.Category.FINITION);
+        PRODUCT_CATEGORIES.put("revêtement",  AnalyzedItem.Category.FINITION);
+        PRODUCT_CATEGORIES.put("faïence",     AnalyzedItem.Category.FINITION);
+        PRODUCT_CATEGORIES.put("ragréage",    AnalyzedItem.Category.FINITION);
+        PRODUCT_CATEGORIES.put("colle",       AnalyzedItem.Category.FINITION);
+        PRODUCT_CATEGORIES.put("joint",       AnalyzedItem.Category.FINITION);
     }
 
     /** Synonymes de produits pour normalisation */
     private static final Map<String, String> PRODUCT_SYNONYMS = new HashMap<>();
     static {
-        // Bureaux
-        PRODUCT_SYNONYMS.put("bureaux opérationnels", "bureau opérationnel");
-        PRODUCT_SYNONYMS.put("bureau executive", "bureau direction");
-        PRODUCT_SYNONYMS.put("bureau executif", "bureau direction");
-        PRODUCT_SYNONYMS.put("postes de travail complets", "poste de travail");
-
-        // Sièges
-        PRODUCT_SYNONYMS.put("chaises visiteurs", "chaise visiteur");
-        PRODUCT_SYNONYMS.put("chaises de bureau", "chaise de bureau");
-        PRODUCT_SYNONYMS.put("fauteuils de direction", "fauteuil direction");
-        PRODUCT_SYNONYMS.put("fauteuils direction", "fauteuil direction");
-        PRODUCT_SYNONYMS.put("fauteuils de conférence", "fauteuil conférence");
-        PRODUCT_SYNONYMS.put("sièges ergonomiques", "siège ergonomique");
-
-        // Rangement
-        PRODUCT_SYNONYMS.put("caissons mobiles", "caisson mobile");
-        PRODUCT_SYNONYMS.put("armoires de rangement", "armoire rangement");
-        PRODUCT_SYNONYMS.put("armoire basse", "armoire basse");
-        PRODUCT_SYNONYMS.put("étagères murales", "étagère murale");
-
-        // Tables
-        PRODUCT_SYNONYMS.put("tables de réunion", "table de réunion");
-        PRODUCT_SYNONYMS.put("tables basses rondes", "table basse ronde");
-
-        // Détente
-        PRODUCT_SYNONYMS.put("poufs modulables", "pouf modulable");
+        PRODUCT_SYNONYMS.put("cem ii",  "ciment CEM II");
+        PRODUCT_SYNONYMS.put("cem i",   "ciment CEM I");
+        PRODUCT_SYNONYMS.put("bpe",     "béton prêt à l'emploi");
+        PRODUCT_SYNONYMS.put("ba",      "béton armé");
+        PRODUCT_SYNONYMS.put("ha",      "fer à béton HA");
+        PRODUCT_SYNONYMS.put("plaques de plâtre", "plaque de plâtre");
+        PRODUCT_SYNONYMS.put("parpaings creux",   "parpaing creux");
+        PRODUCT_SYNONYMS.put("briques creuses",   "brique creuse");
     }
 
-    /** Couleurs normalisées */
+    /** Teintes / finitions normalisées (applicables aux matériaux de finition) */
     private static final Map<String, String> COLOR_NORMALIZATION = new HashMap<>();
     static {
-        COLOR_NORMALIZATION.put("noires", "noir");
-        COLOR_NORMALIZATION.put("noirs", "noir");
-        COLOR_NORMALIZATION.put("blanches", "blanc");
-        COLOR_NORMALIZATION.put("blancs", "blanc");
-        COLOR_NORMALIZATION.put("grises", "gris");
-        COLOR_NORMALIZATION.put("bleues", "bleu");
-        COLOR_NORMALIZATION.put("bleus", "bleu");
-        COLOR_NORMALIZATION.put("rouges", "rouge");
-        COLOR_NORMALIZATION.put("vertes", "vert");
-        COLOR_NORMALIZATION.put("verts", "vert");
-        COLOR_NORMALIZATION.put("chêne clair", "chêne clair");
-        COLOR_NORMALIZATION.put("chêne foncé", "chêne foncé");
+        COLOR_NORMALIZATION.put("grises",    "gris");
+        COLOR_NORMALIZATION.put("blanches",  "blanc");
+        COLOR_NORMALIZATION.put("rouges",    "rouge");
+        COLOR_NORMALIZATION.put("noires",    "noir");
     }
 
     // === MÉTHODE PRINCIPALE ===
@@ -530,7 +551,7 @@ public class AnalysisService {
     }
 
     /**
-     * Déduit des caractéristiques supplémentaires.
+     * Déduit des caractéristiques supplémentaires pour les matériaux de construction.
      *
      * @param item Article à enrichir
      */
@@ -540,43 +561,51 @@ public class AnalysisService {
         String product = item.getProduct() != null ? item.getProduct().toLowerCase() : "";
         String material = item.getMaterial() != null ? item.getMaterial().toLowerCase() : "";
 
-        // Ergonomique
-        if (product.contains("ergonomique") || product.contains("ergonomic")) {
-            item.addCharacteristic("ergonomique");
+        // Haute résistance
+        if (product.contains("haute résistance") || product.contains(" hr") || product.contains("52,5")) {
+            item.addCharacteristic("haute résistance");
         }
 
-        // Réglable en hauteur
-        if (product.contains("assis-debout") || product.contains("réglable")) {
-            item.addCharacteristic("réglable en hauteur");
+        // Traité / protégé
+        if (product.contains("traité") || material.contains("traité")) {
+            item.addCharacteristic("traité");
         }
 
-        // Direction / Conférence
-        if (product.contains("direction") || product.contains("executive")) {
-            item.addCharacteristic("gamme direction");
-        }
-        if (product.contains("conférence") || product.contains("réunion")) {
-            item.addCharacteristic("gamme réunion");
+        // Armé / précontraint
+        if (product.contains("armé") || product.contains("précontraint")) {
+            item.addCharacteristic("armé");
         }
 
-        // Matériaux spécifiques
-        if (material.contains("cuir") || product.contains("cuir")) {
-            item.addCharacteristic("cuir");
-        }
-        if (material.contains("mesh") || product.contains("mesh")) {
-            item.addCharacteristic("dossier mesh");
+        // Étanche / hydrofuge
+        if (product.contains("étanche") || product.contains("hydrofuge") || product.contains("hydrophobe")) {
+            item.addCharacteristic("étanche");
         }
 
-        // Avec roulettes (pour sièges)
-        if (item.getCategory() == AnalyzedItem.Category.SIEGE && product.contains("mobile")) {
-            item.addCharacteristic("sur roulettes");
+        // Certifié / norme
+        if (product.contains("ce") || product.contains("nf") || product.contains("certifié")) {
+            item.addCharacteristic("certifié CE/NF");
         }
 
-        // Empilable
-        if (product.contains("empilable")) {
-            item.addCharacteristic("empilable");
+        // Isolant thermique / phonique
+        if (product.contains("thermique") || product.contains("phonique")) {
+            item.addCharacteristic("isolation thermique/phonique");
         }
 
-        // Nombre de personnes (pour tables)
+        // Format / calibre spécifique (ex: 20/20/50, T50)
+        if (product.matches(".*\\d+[/.]\\d+.*") || product.matches(".*\\bt\\d+\\b.*")) {
+            item.addCharacteristic("format spécifié");
+        }
+
+        // Allégé
+        if (product.contains("allégé") || product.contains("allegé")) {
+            item.addCharacteristic("allégé");
+        }
+
+        // Creux / plein
+        if (product.contains("creux")) item.addCharacteristic("creux");
+        if (product.contains("plein"))  item.addCharacteristic("plein");
+
+        // Nombre de personnes (pour tables
         Pattern persPattern = Pattern.compile("(\\d+)\\s*personnes?");
         Matcher persMatcher = persPattern.matcher(product);
         if (persMatcher.find()) {
@@ -876,10 +905,10 @@ public class AnalysisService {
                         .anyMatch(kw -> product.contains(kw) || material.contains(kw));
                 });
 
-            // Prix unitaire < 20€ pour du mobilier = irréaliste → MAJEURE
-            if (pricePerUnit < 20) {
+            // Prix unitaire < 3€ pour des matériaux = irréaliste → MAJEURE
+            if (pricePerUnit < 3) {
                 analyzed.addMajorInconsistency(String.format(
-                    "Budget irréaliste : %.2f€ par unité pour %d articles de mobilier",
+                    "Budget irréaliste : %.2f€ par unité pour %d articles de matériaux",
                     pricePerUnit, totalQty
                 ));
             }

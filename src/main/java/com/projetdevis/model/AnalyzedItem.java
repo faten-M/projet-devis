@@ -23,18 +23,19 @@ public class AnalyzedItem {
     // === ÉNUMÉRATIONS ===
 
     /**
-     * Catégories de produits pour le mobilier de bureau.
+     * Catégories de produits pour le commerce de gros de matériaux de construction.
      */
     public enum Category {
-        BUREAU("Bureau", "Bureaux, postes de travail"),
-        SIEGE("Siège", "Chaises, fauteuils, tabourets"),
-        RANGEMENT("Rangement", "Armoires, caissons, étagères"),
-        TABLE("Table", "Tables de réunion, tables basses"),
-        ECLAIRAGE("Éclairage", "Lampes, luminaires"),
-        ACCESSOIRE("Accessoire", "Accessoires de bureau"),
-        ESPACE_DETENTE("Espace détente", "Canapés, poufs, mobilier lounge"),
-        CLOISON("Cloison", "Cloisons, panneaux, séparateurs"),
-        AUTRE("Autre", "Produit non catégorisé");
+        GROS_OEUVRE("Gros œuvre",     "Ciment, béton, parpaing, brique, acier, sable, gravier"),
+        SECOND_OEUVRE("Second œuvre", "Plâtre, placo, cloison sèche, faux-plafond"),
+        COUVERTURE("Couverture",       "Tuiles, ardoise, zinc, membrane d'étanchéité, gouttière"),
+        CHARPENTE("Charpente & Bois",  "Bois de charpente, OSB, contreplaqué, lambris, chevron"),
+        PLOMBERIE("Plomberie",         "Tuyaux, raccords, robinetterie, sanitaires"),
+        ELECTRICITE("Électricité",     "Câbles, gaines, tableaux, disjoncteurs, prises"),
+        VRD("VRD",                     "Voirie, bordures, canalisations, pavage, bitume"),
+        ISOLATION("Isolation",         "Laine de verre, laine de roche, polystyrène, pare-vapeur"),
+        FINITION("Finition",           "Peinture, carrelage, enduit, parquet, revêtement de sol"),
+        AUTRE("Autre",                 "Produit non catégorisé");
 
         private final String label;
         private final String description;
@@ -94,6 +95,9 @@ public class AnalyzedItem {
     /** Couleur normalisée */
     private String color;
 
+    /** Unité de mesure (m², tonne, sac, ml, m³, palette, u…) */
+    private String unite;
+
     /** Caractéristiques du produit */
     private List<String> characteristics;
 
@@ -147,6 +151,7 @@ public class AnalyzedItem {
             this.model = source.getModel();
             this.material = source.getMaterial();
             this.color = source.getColor();
+            this.unite = source.getUnite();
             if (source.getCharacteristics() != null) {
                 this.characteristics.addAll(source.getCharacteristics());
             }
@@ -202,6 +207,14 @@ public class AnalyzedItem {
 
     public void setColor(String color) {
         this.color = color;
+    }
+
+    public String getUnite() {
+        return unite;
+    }
+
+    public void setUnite(String unite) {
+        this.unite = unite;
     }
 
     public List<String> getCharacteristics() {

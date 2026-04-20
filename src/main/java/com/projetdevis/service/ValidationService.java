@@ -947,15 +947,16 @@ public class ValidationService {
      */
     private String generateReference(AnalyzedItem.Category category, int lineNum) {
         String catCode = switch (category) {
-            case BUREAU -> "BUR";
-            case SIEGE -> "SIG";
-            case RANGEMENT -> "RNG";
-            case TABLE -> "TAB";
-            case ECLAIRAGE -> "ECL";
-            case ACCESSOIRE -> "ACC";
-            case ESPACE_DETENTE -> "DET";
-            case CLOISON -> "CLO";
-            case AUTRE -> "DIV";
+            case GROS_OEUVRE   -> "GRO";
+            case SECOND_OEUVRE -> "SEC";
+            case COUVERTURE    -> "COV";
+            case CHARPENTE     -> "CHA";
+            case PLOMBERIE     -> "PLO";
+            case ELECTRICITE   -> "ELE";
+            case VRD           -> "VRD";
+            case ISOLATION     -> "ISO";
+            case FINITION      -> "FIN";
+            case AUTRE         -> "DIV";
         };
         return String.format("%s-%03d", catCode, lineNum);
     }

@@ -10,8 +10,8 @@ import org.springframework.stereotype.Component;
  * Initialise le catalogue produits au démarrage de l'application.
  *
  * Si la table produits est vide, ce composant insère les prix de référence
- * pour chaque catégorie de mobilier. Ces valeurs remplacent les constantes
- * codées en dur dans DraftService.
+ * pour chaque catégorie de matériaux de construction. Ces valeurs remplacent
+ * les constantes codées en dur dans DraftService.
  */
 @Component
 public class CatalogueInitService implements CommandLineRunner {
@@ -28,16 +28,17 @@ public class CatalogueInitService implements CommandLineRunner {
             return; // Catalogue déjà initialisé
         }
 
-        // Grille des prix [économique, standard, premium] par catégorie
-        produitRepository.save(new Produit("Bureau",         AnalyzedItem.Category.BUREAU,         250, 450,  800));
-        produitRepository.save(new Produit("Siège",          AnalyzedItem.Category.SIEGE,           150, 350,  650));
-        produitRepository.save(new Produit("Rangement",      AnalyzedItem.Category.RANGEMENT,       200, 400,  700));
-        produitRepository.save(new Produit("Table",          AnalyzedItem.Category.TABLE,           300, 600, 1200));
-        produitRepository.save(new Produit("Éclairage",      AnalyzedItem.Category.ECLAIRAGE,        50, 120,  250));
-        produitRepository.save(new Produit("Accessoire",     AnalyzedItem.Category.ACCESSOIRE,       30,  80,  150));
-        produitRepository.save(new Produit("Espace détente", AnalyzedItem.Category.ESPACE_DETENTE,  400, 800, 1500));
-        produitRepository.save(new Produit("Cloison",        AnalyzedItem.Category.CLOISON,         150, 300,  500));
-        produitRepository.save(new Produit("Autre",          AnalyzedItem.Category.AUTRE,           100, 200,  400));
+        // Grille des prix [économique, standard, premium] — matériaux de construction
+        produitRepository.save(new Produit("Gros œuvre",   AnalyzedItem.Category.GROS_OEUVRE,    6,  18,  45));
+        produitRepository.save(new Produit("Second œuvre", AnalyzedItem.Category.SECOND_OEUVRE,  8,  16,  28));
+        produitRepository.save(new Produit("Couverture",   AnalyzedItem.Category.COUVERTURE,    22,  38,  65));
+        produitRepository.save(new Produit("Charpente",    AnalyzedItem.Category.CHARPENTE,      5,  12,  28));
+        produitRepository.save(new Produit("Plomberie",    AnalyzedItem.Category.PLOMBERIE,      8,  22,  55));
+        produitRepository.save(new Produit("Électricité",  AnalyzedItem.Category.ELECTRICITE,    5,  16,  42));
+        produitRepository.save(new Produit("VRD",          AnalyzedItem.Category.VRD,           14,  32,  68));
+        produitRepository.save(new Produit("Isolation",    AnalyzedItem.Category.ISOLATION,      8,  18,  38));
+        produitRepository.save(new Produit("Finition",     AnalyzedItem.Category.FINITION,      10,  26,  58));
+        produitRepository.save(new Produit("Autre",        AnalyzedItem.Category.AUTRE,         10,  25,  50));
 
         System.out.println("[Catalogue] " + produitRepository.count() + " produits initialisés.");
     }
