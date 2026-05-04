@@ -2,8 +2,10 @@ package com.projetdevis.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.openai.client.OpenAIClient;
 import com.openai.client.okhttp.OpenAIOkHttpClient;
+import com.openai.models.ResponseFormatJsonSchema;
 import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
 
@@ -16,10 +18,9 @@ import java.util.regex.Pattern;
 
 /**
  * Service d'extraction IA :
- *  - extractProducts() / extractProductList() : analyse complète d'un e-mail par le LLM,
- *    sans regex ni liste de mots-clés — le modèle fait toute l'analyse.
- *  - parseQuantity() : parseur interne qui convertit les quantités floues
- *    ("une dizaine", "quelques"…) en entiers, avec repli sur le LLM si nécessaire.
+ *  - extractProducts() / extractProductList() : extrait les produits de l'e-mail via LLM.
+ *  - extractMetadata() : extrait budget, date de livraison et urgence via LLM.
+ *  - parseQuantity() : convertit les quantités floues en entiers.
  */
 public class ExtractInfoIA {
 
@@ -63,6 +64,21 @@ public class ExtractInfoIA {
         + "    }\n"
         + "  ]\n"
         + "}";
+
+    // ── Prompt : extraction des métadonnées (budget, date, urgence) ─────────
+    private static final String METADATA_SYSTEM_PROMPT =
+        "Tu es un assistant expert en analyse d'e-mails pour une entreprise de commerce de gros "
+        + "de matériaux de construction.\n\n"
+        + "Ton rôle est d'extraire uniquement les métadonnées suivantes de l'e-mail :\n"
+        + "  - budget_montant : le montant numérique du budget (ex: 8000.0). Mettre 0 si absent.\n"
+        + "  - budget_unite   : l'unité du budget parmi \"HT\", \"TTC\", \"\" si inconnue.\n"
+        + "  - budget_brut    : le texte brut du budget tel qu'il apparaît (ex: \"environ 8000 euros HT\"). \"\" si absent.\n"
+        + "  - date_livraison : la date de livraison souhaitée au format ISO YYYY-MM-DD (ex: \"2026-06-20\"). \"\" si absente.\n"
+        + "  - date_livraison_brut : le texte brut de la date (ex: \"avant le 20 juin 2026\"). \"\" si absent.\n"
+        + "  - urgence        : niveau d'urgence parmi \"normal\", \"urgent\", \"très urgent\", \"critique\".\n\n"
+        + "Règles :\n"
+        + "  - Ne pas extraire les produits (traités séparément).\n"
+        + "  - Retourner UNIQUEMENT le JSON, sans texte avant ni après, sans markdown.";
 
     // ── Prompt : interprétation des quantités floues ─────────────────────────
     private static final String QUANTITY_SYSTEM_PROMPT =
@@ -178,10 +194,44 @@ public class ExtractInfoIA {
 
         String userPrompt = "Voici l'e-mail à analyser :\n\n" + email;
 
+        // Schéma JSON pour Structured Outputs
+        ObjectNode schema = objectMapper.createObjectNode();
+        schema.put("type", "object");
+        ObjectNode properties = schema.putObject("properties");
+        ObjectNode produitsArray = properties.putObject("produits");
+        produitsArray.put("type", "array");
+        ObjectNode items = produitsArray.putObject("items");
+        items.put("type", "object");
+        ObjectNode itemProps = items.putObject("properties");
+        itemProps.putObject("nom").put("type", "string");
+        itemProps.putObject("quantite").put("type", "string");
+        itemProps.putObject("unite").put("type", "string");
+        itemProps.putObject("details").put("type", "string");
+        items.putArray("required").add("nom").add("quantite").add("unite").add("details");
+        items.put("additionalProperties", false);
+        schema.putArray("required").add("produits");
+        schema.put("additionalProperties", false);
+
+        ResponseFormatJsonSchema responseFormat = ResponseFormatJsonSchema.builder()
+                .jsonSchema(ResponseFormatJsonSchema.JsonSchema.builder()
+                        .name("extraction_produits")
+                        .schema(ResponseFormatJsonSchema.JsonSchema.Schema.builder()
+                                .putAdditionalProperty("type", com.openai.core.JsonValue.from("object"))
+                                .putAdditionalProperty("properties", com.openai.core.JsonValue.from(
+                                        objectMapper.convertValue(properties, Map.class)))
+                                .putAdditionalProperty("required", com.openai.core.JsonValue.from(
+                                        List.of("produits")))
+                                .putAdditionalProperty("additionalProperties", com.openai.core.JsonValue.from(false))
+                                .build())
+                        .strict(true)
+                        .build())
+                .build();
+
         ChatCompletionCreateParams params = ChatCompletionCreateParams.builder()
                 .model(MODEL)
                 .addSystemMessage(EXTRACTION_SYSTEM_PROMPT)
                 .addUserMessage(userPrompt)
+                .responseFormat(responseFormat)
                 .build();
 
         try {
@@ -192,15 +242,9 @@ public class ExtractInfoIA {
                     .orElse("{\"produits\":[]}")
                     .trim();
 
-            // Supprimer un éventuel bloc markdown ```json ... ```
-            if (raw.startsWith("```")) {
-                raw = raw.replaceAll("(?s)^```(?:json)?\\s*", "").replaceAll("```\\s*$", "").trim();
-            }
-
             // Validation : lève une exception si le JSON est malformé
             JsonNode root = objectMapper.readTree(raw);
 
-            // S'assurer que la clé "produits" existe et est un tableau
             if (!root.has("produits") || !root.get("produits").isArray()) {
                 System.err.println("[ExtractInfoIA] JSON inattendu (clé 'produits' absente) : " + raw);
                 return "{\"produits\":[]}";
@@ -223,6 +267,80 @@ public class ExtractInfoIA {
      * ensuite par {@link #parseQuantity(String)}.
      */
     public record ProductInfo(String nom, String quantite, String unite, String details) {}
+
+    /** Métadonnées extraites de l'e-mail (budget, date de livraison, urgence). */
+    public record MetadataInfo(
+            Double budgetMontant,
+            String budgetUnite,
+            String budgetBrut,
+            String dateLivraison,
+            String dateLivraisonBrut,
+            String urgence) {}
+
+    /**
+     * Extrait les métadonnées de l'e-mail via le LLM : budget, date de livraison, urgence.
+     *
+     * @param email texte de l'e-mail
+     * @return métadonnées extraites (jamais null)
+     */
+    public MetadataInfo extractMetadata(String email) {
+        if (email == null || email.isBlank()) {
+            return new MetadataInfo(null, "", "", "", "", "normal");
+        }
+
+        ObjectNode properties = objectMapper.createObjectNode();
+        properties.putObject("budget_montant").put("type", "number");
+        properties.putObject("budget_unite").put("type", "string");
+        properties.putObject("budget_brut").put("type", "string");
+        properties.putObject("date_livraison").put("type", "string");
+        properties.putObject("date_livraison_brut").put("type", "string");
+        properties.putObject("urgence").put("type", "string");
+
+        ResponseFormatJsonSchema responseFormat = ResponseFormatJsonSchema.builder()
+                .jsonSchema(ResponseFormatJsonSchema.JsonSchema.builder()
+                        .name("extraction_metadata")
+                        .schema(ResponseFormatJsonSchema.JsonSchema.Schema.builder()
+                                .putAdditionalProperty("type", com.openai.core.JsonValue.from("object"))
+                                .putAdditionalProperty("properties", com.openai.core.JsonValue.from(
+                                        objectMapper.convertValue(properties, Map.class)))
+                                .putAdditionalProperty("required", com.openai.core.JsonValue.from(List.of(
+                                        "budget_montant", "budget_unite", "budget_brut",
+                                        "date_livraison", "date_livraison_brut", "urgence")))
+                                .putAdditionalProperty("additionalProperties", com.openai.core.JsonValue.from(false))
+                                .build())
+                        .strict(true)
+                        .build())
+                .build();
+
+        ChatCompletionCreateParams params = ChatCompletionCreateParams.builder()
+                .model(MODEL)
+                .addSystemMessage(METADATA_SYSTEM_PROMPT)
+                .addUserMessage("Voici l'e-mail à analyser :\n\n" + email)
+                .responseFormat(responseFormat)
+                .build();
+
+        try {
+            ChatCompletion completion = client.chat().completions().create(params);
+            String raw = completion.choices().get(0).message().content()
+                    .orElse("{}").trim();
+
+            JsonNode root = objectMapper.readTree(raw);
+
+            double montantRaw = root.path("budget_montant").asDouble(0.0);
+            Double montant = montantRaw > 0 ? montantRaw : null;
+            String unite = root.path("budget_unite").asText("").trim();
+            String budgetBrut = root.path("budget_brut").asText("").trim();
+            String dateLiv = root.path("date_livraison").asText("").trim();
+            String dateLivBrut = root.path("date_livraison_brut").asText("").trim();
+            String urgence = root.path("urgence").asText("normal").trim();
+
+            return new MetadataInfo(montant, unite, budgetBrut, dateLiv, dateLivBrut, urgence);
+
+        } catch (Exception e) {
+            System.err.println("[ExtractInfoIA] Erreur extraction métadonnées : " + e.getMessage());
+            return new MetadataInfo(null, "", "", "", "", "normal");
+        }
+    }
 
     /**
      * Version typée de {@link #extractProducts(String)}.

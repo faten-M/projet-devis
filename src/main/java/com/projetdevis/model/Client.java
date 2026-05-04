@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 /**
@@ -538,6 +539,7 @@ public class Client {
         }
     }
 
+    @JsonIgnore
     public Contact getContactPrincipal() {
         return contacts.stream()
             .filter(Contact::isPrincipal)
@@ -717,6 +719,7 @@ public class Client {
      *
      * @return true si prospect
      */
+    @JsonIgnore
     public boolean isProspect() {
         return segment == Segment.PROSPECT || nombreCommandes == 0;
     }
@@ -726,6 +729,7 @@ public class Client {
      *
      * @return true si un email est disponible
      */
+    @JsonIgnore
     public boolean hasEmail() {
         Contact principal = getContactPrincipal();
         return principal != null && principal.getEmail() != null;
@@ -733,9 +737,8 @@ public class Client {
 
     /**
      * Retourne l'email du contact principal.
-     *
-     * @return Email ou null
      */
+    @JsonIgnore
     public String getEmail() {
         Contact principal = getContactPrincipal();
         return principal != null ? principal.getEmail() : null;
@@ -746,6 +749,7 @@ public class Client {
      *
      * @return true si le client peut commander
      */
+    @JsonIgnore
     public boolean canOrder() {
         if (status == Status.BLOQUE || status == Status.ARCHIVE) {
             return false;
@@ -756,11 +760,7 @@ public class Client {
         return true;
     }
 
-    /**
-     * Calcule le crédit disponible.
-     *
-     * @return Crédit disponible ou null si pas de plafond
-     */
+    @JsonIgnore
     public Double getCreditDisponible() {
         if (plafondCredit == null) return null;
         double encours = encoursActuel != null ? encoursActuel : 0;
@@ -772,6 +772,7 @@ public class Client {
      *
      * @return Nom commercial ou raison sociale
      */
+    @JsonIgnore
     public String getNomAffichage() {
         return nomCommercial != null ? nomCommercial : raisonSociale;
     }
@@ -801,26 +802,19 @@ public class Client {
      *
      * @return Date formatée
      */
+    @JsonIgnore
     public String getFormattedDateCreation() {
         if (dateCreation == null) return "N/A";
         return dateCreation.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
     }
 
-    /**
-     * Retourne le chiffre d'affaires formaté.
-     *
-     * @return CA formaté
-     */
+    @JsonIgnore
     public String getFormattedCA() {
         if (chiffreAffairesCumule == null) return "0,00 €";
         return String.format("%,.2f €", chiffreAffairesCumule);
     }
 
-    /**
-     * Génère un résumé de la fiche client.
-     *
-     * @return Résumé textuel
-     */
+    @JsonIgnore
     public String getSummary() {
         StringBuilder sb = new StringBuilder();
 

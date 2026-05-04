@@ -11,6 +11,8 @@ import com.projetdevis.repository.ClientRepository;
 import com.projetdevis.repository.DraftQuoteRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -63,15 +65,17 @@ public class DevisPipelineService {
     private ExtractedInfo buildExtractedInfo(String cleaned, ExtractInfoIA ia) {
         ExtractedInfo info = new ExtractedInfo(cleaned);
 
+        // Extraction des produits et des métadonnées en parallèle (deux appels LLM)
         List<ExtractInfoIA.ProductInfo> produits = ia.extractProductList(cleaned);
+        ExtractInfoIA.MetadataInfo meta = ia.extractMetadata(cleaned);
 
+        // — Produits —
         for (ExtractInfoIA.ProductInfo p : produits) {
             if (p.nom() == null || p.nom().isBlank()) continue;
 
             ItemRequest item = new ItemRequest();
             item.setProduct(p.nom());
 
-            // Conversion de la quantité brute en entier via le parseur interne
             int qty = 1;
             try {
                 qty = ia.parseQuantity(p.quantite() != null && !p.quantite().isBlank()
@@ -79,16 +83,38 @@ public class DevisPipelineService {
             } catch (Exception ignored) {}
             item.setQuantity(qty);
 
-            // Unité de mesure (m², tonne, sac, ml…) transmise telle quelle
             item.setUnite(p.unite());
 
-            // Les détails sont portés comme caractéristique libre (grade, norme, dimensions…)
             if (p.details() != null && !p.details().isBlank()) {
                 item.addCharacteristic(p.details());
             }
 
             item.setRawLine(p.nom() + " × " + p.quantite() + " " + p.unite());
             info.addItem(item);
+        }
+
+        // — Budget —
+        if (meta.budgetMontant() != null) {
+            info.setBudget(meta.budgetMontant());
+            info.setBudgetUnit(meta.budgetUnite());
+            info.setBudgetRaw(meta.budgetBrut());
+        }
+
+        // — Date de livraison —
+        if (meta.dateLivraisonBrut() != null && !meta.dateLivraisonBrut().isBlank()) {
+            info.setDeliveryDateRaw(meta.dateLivraisonBrut());
+        }
+        if (meta.dateLivraison() != null && !meta.dateLivraison().isBlank()) {
+            try {
+                info.setDeliveryDate(LocalDate.parse(meta.dateLivraison()));
+            } catch (DateTimeParseException e) {
+                System.err.println("[Pipeline] Date non parsable : " + meta.dateLivraison());
+            }
+        }
+
+        // — Urgence —
+        if (meta.urgence() != null && !meta.urgence().isBlank()) {
+            info.setUrgency(meta.urgence());
         }
 
         info.setConfidence(produits.isEmpty() ? 0.0 : 0.7);

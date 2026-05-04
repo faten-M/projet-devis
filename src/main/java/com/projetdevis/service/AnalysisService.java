@@ -180,8 +180,8 @@ public class AnalysisService {
     /** Synonymes de produits pour normalisation */
     private static final Map<String, String> PRODUCT_SYNONYMS = new HashMap<>();
     static {
-        PRODUCT_SYNONYMS.put("cem ii",  "ciment CEM II");
-        PRODUCT_SYNONYMS.put("cem i",   "ciment CEM I");
+        PRODUCT_SYNONYMS.put("cem ii",  "CEM II");
+        PRODUCT_SYNONYMS.put("cem i",   "CEM I");
         PRODUCT_SYNONYMS.put("bpe",     "béton prêt à l'emploi");
         PRODUCT_SYNONYMS.put("ba",      "béton armé");
         PRODUCT_SYNONYMS.put("ha",      "fer à béton HA");
