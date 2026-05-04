@@ -67,8 +67,8 @@ public class ProduitController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
                     .body("Catégorie inconnue : '" + request.getCategorie() + "'. "
-                        + "Valeurs acceptées : BUREAU, SIEGE, RANGEMENT, TABLE, ECLAIRAGE, "
-                        + "ACCESSOIRE, ESPACE_DETENTE, CLOISON, AUTRE.");
+                        + "Valeurs acceptées : GROS_OEUVRE, SECOND_OEUVRE, COUVERTURE, "
+                        + "CHARPENTE, PLOMBERIE, ELECTRICITE, VRD, ISOLATION, FINITION, AUTRE.");
         }
 
         Produit produit = new Produit(
