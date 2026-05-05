@@ -1,6 +1,7 @@
 package com.projetdevis.controller;
 
 import com.projetdevis.dto.ProduitRequest;
+import com.projetdevis.dto.ProduitResponse;
 import com.projetdevis.model.AnalyzedItem;
 import com.projetdevis.model.Produit;
 import com.projetdevis.repository.ProduitRepository;
@@ -8,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Contrôleur REST pour la gestion du catalogue produits.
@@ -29,8 +31,11 @@ public class ProduitController {
      * Liste tous les produits du catalogue.
      */
     @GetMapping
-    public ResponseEntity<List<Produit>> getAllProduits() {
-        return ResponseEntity.ok(produitRepository.findAll());
+    public ResponseEntity<List<ProduitResponse>> getAllProduits() {
+        List<ProduitResponse> list = produitRepository.findAll().stream()
+                .map(ProduitResponse::from)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(list);
     }
 
     /**
@@ -82,6 +87,6 @@ public class ProduitController {
         produit.setReference(request.getReference());
 
         Produit saved = produitRepository.save(produit);
-        return ResponseEntity.status(201).body(saved);
+        return ResponseEntity.status(201).body(ProduitResponse.from(saved));
     }
 }

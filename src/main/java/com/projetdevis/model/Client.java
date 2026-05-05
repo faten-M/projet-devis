@@ -321,13 +321,13 @@ public class Client {
     private int nombreCommandes;
 
     /** Liste des numéros de devis */
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "client_historique_devis", joinColumns = @JoinColumn(name = "client_id"))
     @Column(name = "quote_number", length = 100)
     private List<String> historiqueDevis;
 
     /** Notes internes */
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "client_notes", joinColumns = @JoinColumn(name = "client_id"))
     @Column(name = "note_text", length = 2000)
     private List<String> notes;
