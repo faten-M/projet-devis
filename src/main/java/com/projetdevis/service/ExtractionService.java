@@ -145,8 +145,17 @@ public class ExtractionService {
         "meuble", "meubles", "mobilier", "cloison", "cloisons",
         "panneau", "panneaux", "tiroir", "tiroirs", "bibliothèque", "bibliothèques"
     );
+    private final ExtractInfoIA quantityIA;
 
-    private final ExtractInfoIA quantityIA = new ExtractInfoIA();
+    // Constructeur normal 
+    public ExtractionService() {
+        this.quantityIA = new ExtractInfoIA();
+    }
+
+// Constructeur pour les tests 
+    public ExtractionService(ExtractInfoIA quantityIA) {
+        this.quantityIA = quantityIA;
+    }
 
     public ExtractedInfo extract(String cleanedEmail) {
         ExtractedInfo info = new ExtractedInfo(cleanedEmail);
@@ -165,6 +174,7 @@ public class ExtractionService {
 
         return info;
     }
+   
 
     private void extractItems(String text, ExtractedInfo info) {
         Set<String> processedLines = new HashSet<>();
