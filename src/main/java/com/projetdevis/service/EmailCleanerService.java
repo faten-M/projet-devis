@@ -5,10 +5,13 @@ import java.util.regex.Pattern;
 import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.stereotype.Service;
+
 /**
  * Service de nettoyage des emails pour extraction du contenu utile.
  * Pipeline : signature -> replies -> images -> phrases inutiles -> extraction
  */
+@Service
 public class EmailCleanerService {
 
     // Client IA désactivé - utiliser EmailCleanerIA à la place pour le nettoyage par IA

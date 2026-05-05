@@ -5,6 +5,7 @@ import com.projetdevis.dto.DevisResponse;
 import com.projetdevis.dto.ValiderRequest;
 import com.projetdevis.model.DraftQuote;
 import com.projetdevis.service.DevisPipelineService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,19 +37,11 @@ public class DevisController {
      *         ou 503 si la clé OpenAI est manquante
      */
     @PostMapping("/devis")
-    public ResponseEntity<?> createDevis(@RequestBody DevisRequest request) {
-
-        if (request.getEmailText() == null || request.getEmailText().isBlank()) {
-            return ResponseEntity.badRequest()
-                    .body("Le champ 'emailText' est obligatoire et ne peut pas être vide.");
-        }
-
+    public ResponseEntity<?> createDevis(@Valid @RequestBody DevisRequest request) {
         try {
             DraftQuote draft = pipelineService.process(request.getEmailText());
             return ResponseEntity.ok(DevisResponse.from(draft));
-
         } catch (IllegalStateException e) {
-            // OPENAI_API_KEY manquante
             return ResponseEntity.status(503)
                     .body("Service indisponible : " + e.getMessage());
         }

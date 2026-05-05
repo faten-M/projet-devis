@@ -10,6 +10,7 @@ import com.projetdevis.model.QuoteItem;
 import com.projetdevis.repository.ClientRepository;
 import com.projetdevis.repository.DraftQuoteRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
@@ -27,18 +28,22 @@ import java.util.Optional;
 @Service
 public class DevisPipelineService {
 
-    private final EmailCleanerService  cleanerService  = new EmailCleanerService();
-    private final AnalysisService      analysisService = new AnalysisService();
+    private final EmailCleanerService  cleanerService;
+    private final AnalysisService      analysisService;
     private final DraftService         draftService;
     private final DraftQuoteRepository quoteRepository;
     private final ClientRepository     clientRepository;
 
-    // ExtractInfoIA est créé à la demande car il nécessite OPENAI_API_KEY.
+    // ExtractInfoIA créé à la demande : nécessite OPENAI_API_KEY au runtime.
     private ExtractInfoIA extractInfoIA;
 
-    public DevisPipelineService(DraftService draftService,
+    public DevisPipelineService(EmailCleanerService cleanerService,
+                                AnalysisService analysisService,
+                                DraftService draftService,
                                 DraftQuoteRepository quoteRepository,
                                 ClientRepository clientRepository) {
+        this.cleanerService    = cleanerService;
+        this.analysisService   = analysisService;
         this.draftService      = draftService;
         this.quoteRepository   = quoteRepository;
         this.clientRepository  = clientRepository;
@@ -128,6 +133,7 @@ public class DevisPipelineService {
      * @return devis brouillon généré
      * @throws IllegalStateException si la variable d'environnement OPENAI_API_KEY est absente
      */
+    @Transactional
     public DraftQuote process(String rawEmail) {
         // Étape 1 — Nettoyage
         String cleaned = cleanerService.clean(rawEmail);

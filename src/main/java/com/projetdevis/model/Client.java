@@ -340,17 +340,13 @@ public class Client {
     /** Email d'origine (si créé à partir d'un email) */
     private String emailOrigine;
 
-    // === COMPTEUR POUR ID UNIQUE ===
-
-    private static int counter = 0;
-
     // === CONSTRUCTEURS ===
 
     /**
      * Constructeur par défaut.
      */
     public Client() {
-        this.clientId = generateClientId();
+        this.clientId = java.util.UUID.randomUUID().toString();
         this.dateCreation = LocalDateTime.now();
         this.dateModification = LocalDateTime.now();
         this.segment = Segment.PROSPECT;
@@ -391,15 +387,6 @@ public class Client {
     }
 
     // === GÉNÉRATION D'IDENTIFIANTS ===
-
-    /**
-     * Génère un identifiant client unique.
-     */
-    private static synchronized String generateClientId() {
-        counter++;
-        return String.format("CLI-%d-%04d",
-            System.currentTimeMillis() % 100000, counter);
-    }
 
     /**
      * Génère un numéro de compte client.
