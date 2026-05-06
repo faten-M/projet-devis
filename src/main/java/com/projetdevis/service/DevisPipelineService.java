@@ -10,6 +10,7 @@ import com.projetdevis.model.QuoteItem;
 import com.projetdevis.repository.ClientRepository;
 import com.projetdevis.repository.DraftQuoteRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
@@ -27,18 +28,22 @@ import java.util.Optional;
 @Service
 public class DevisPipelineService {
 
-    private final EmailCleanerService  cleanerService  = new EmailCleanerService();
-    private final AnalysisService      analysisService = new AnalysisService();
+    private final EmailCleanerService  cleanerService;
+    private final AnalysisService      analysisService;
     private final DraftService         draftService;
     private final DraftQuoteRepository quoteRepository;
     private final ClientRepository     clientRepository;
 
-    // ExtractInfoIA est créé à la demande car il nécessite OPENAI_API_KEY.
+    // ExtractInfoIA créé à la demande : nécessite OPENAI_API_KEY au runtime.
     private ExtractInfoIA extractInfoIA;
 
-    public DevisPipelineService(DraftService draftService,
+    public DevisPipelineService(EmailCleanerService cleanerService,
+                                AnalysisService analysisService,
+                                DraftService draftService,
                                 DraftQuoteRepository quoteRepository,
                                 ClientRepository clientRepository) {
+        this.cleanerService    = cleanerService;
+        this.analysisService   = analysisService;
         this.draftService      = draftService;
         this.quoteRepository   = quoteRepository;
         this.clientRepository  = clientRepository;
@@ -62,12 +67,12 @@ public class DevisPipelineService {
      *   <li>les détails (couleur, matière…) sont conservés comme caractéristique libre.</li>
      * </ul>
      */
-    private ExtractedInfo buildExtractedInfo(String cleaned, ExtractInfoIA ia) {
+    private ExtractedInfo buildExtractedInfo(String cleaned, ExtractInfoIA ia,
+                                             ExtractInfoIA.MetadataInfo meta) {
         ExtractedInfo info = new ExtractedInfo(cleaned);
 
-        // Extraction des produits et des métadonnées en parallèle (deux appels LLM)
+        // Extraction des produits
         List<ExtractInfoIA.ProductInfo> produits = ia.extractProductList(cleaned);
-        ExtractInfoIA.MetadataInfo meta = ia.extractMetadata(cleaned);
 
         // — Produits —
         for (ExtractInfoIA.ProductInfo p : produits) {
@@ -128,12 +133,15 @@ public class DevisPipelineService {
      * @return devis brouillon généré
      * @throws IllegalStateException si la variable d'environnement OPENAI_API_KEY est absente
      */
+    @Transactional
     public DraftQuote process(String rawEmail) {
-        // Étape 1 — Nettoyage (pas d'IA, toujours disponible)
+        // Étape 1 — Nettoyage
         String cleaned = cleanerService.clean(rawEmail);
 
-        // Étape 2 — Extraction par le LLM uniquement (zéro regex, zéro mots-clés)
-        ExtractedInfo extracted = buildExtractedInfo(cleaned, getExtractInfoIA());
+        // Étape 2 — Extraction LLM : métadonnées + produits
+        ExtractInfoIA ia = getExtractInfoIA();
+        ExtractInfoIA.MetadataInfo meta = ia.extractMetadata(cleaned);
+        ExtractedInfo extracted = buildExtractedInfo(cleaned, ia, meta);
 
         // Étape 3 — Analyse et classification
         AnalyzedInfo analyzed = analysisService.analyze(extracted);
@@ -141,10 +149,21 @@ public class DevisPipelineService {
         // Étape 4 — Génération du devis brouillon
         DraftQuote draft = draftService.generateDraft(analyzed);
 
-        // Étape 5 — Création d'une fiche client prospect
-        Client client = new Client("Prospect");
+        // Étape 5 — Création ou récupération de la fiche client (déduplication par email)
+        String nomClient   = meta.nomClient() != null && !meta.nomClient().isBlank()
+                             ? meta.nomClient() : "Prospect";
+        String emailClient = meta.emailClient() != null ? meta.emailClient().trim() : "";
+
+        Client client = emailClient.isBlank()
+                ? new Client(nomClient)
+                : clientRepository.findByEmailOrigine(emailClient)
+                                  .orElseGet(() -> new Client(nomClient));
+
         client.setSourceOrigine("EMAIL");
-        client.getHistoriqueDevis().add(draft.getQuoteNumber());
+        client.setEmailOrigine(emailClient.isBlank() ? null : emailClient);
+        if (!client.getHistoriqueDevis().contains(draft.getQuoteNumber())) {
+            client.getHistoriqueDevis().add(draft.getQuoteNumber());
+        }
         clientRepository.save(client);
         draft.setClientReference(client.getClientId());
 

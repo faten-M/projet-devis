@@ -134,25 +134,25 @@ public class QuoteItem {
     private Integer deliveryDays;
 
     /** Options disponibles */
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "quote_item_options", joinColumns = @JoinColumn(name = "item_id"))
     @Column(name = "option_text", length = 1000)
     private List<String> options;
 
     /** Alternatives suggérées */
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "quote_item_alternatives", joinColumns = @JoinColumn(name = "item_id"))
     @Column(name = "alternative_text", length = 1000)
     private List<String> alternatives;
 
     /** Notes internes pour le commercial */
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "quote_item_notes", joinColumns = @JoinColumn(name = "item_id"))
     @Column(name = "note_text", length = 2000)
     private List<String> internalNotes;
 
     /** Avertissements à afficher */
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "quote_item_warnings", joinColumns = @JoinColumn(name = "item_id"))
     @Column(name = "warning_text", length = 1000)
     private List<String> warnings;

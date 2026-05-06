@@ -3,6 +3,7 @@ package com.projetdevis.service;
 import com.projetdevis.model.AnalyzedInfo;
 import com.projetdevis.model.AnalyzedItem;
 import com.projetdevis.model.ExtractedInfo;
+import org.springframework.stereotype.Service;
 import com.projetdevis.model.ItemRequest;
 
 import java.time.LocalDate;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
  * @author BMAD Pipeline - Étape 4
  * @version 1.0
  */
+@Service
 public class AnalysisService {
 
     // === LISTES DE FILTRAGE ===

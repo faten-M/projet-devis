@@ -65,17 +65,19 @@ public class ExtractInfoIA {
         + "  ]\n"
         + "}";
 
-    // ── Prompt : extraction des métadonnées (budget, date, urgence) ─────────
+    // ── Prompt : extraction des métadonnées (budget, date, urgence, client) ──
     private static final String METADATA_SYSTEM_PROMPT =
         "Tu es un assistant expert en analyse d'e-mails pour une entreprise de commerce de gros "
         + "de matériaux de construction.\n\n"
         + "Ton rôle est d'extraire uniquement les métadonnées suivantes de l'e-mail :\n"
-        + "  - budget_montant : le montant numérique du budget (ex: 8000.0). Mettre 0 si absent.\n"
-        + "  - budget_unite   : l'unité du budget parmi \"HT\", \"TTC\", \"\" si inconnue.\n"
-        + "  - budget_brut    : le texte brut du budget tel qu'il apparaît (ex: \"environ 8000 euros HT\"). \"\" si absent.\n"
-        + "  - date_livraison : la date de livraison souhaitée au format ISO YYYY-MM-DD (ex: \"2026-06-20\"). \"\" si absente.\n"
+        + "  - budget_montant      : le montant numérique du budget (ex: 8000.0). Mettre 0 si absent.\n"
+        + "  - budget_unite        : l'unité du budget parmi \"HT\", \"TTC\", \"\" si inconnue.\n"
+        + "  - budget_brut         : le texte brut du budget (ex: \"environ 8000 euros HT\"). \"\" si absent.\n"
+        + "  - date_livraison      : la date de livraison au format ISO YYYY-MM-DD. \"\" si absente.\n"
         + "  - date_livraison_brut : le texte brut de la date (ex: \"avant le 20 juin 2026\"). \"\" si absent.\n"
-        + "  - urgence        : niveau d'urgence parmi \"normal\", \"urgent\", \"très urgent\", \"critique\".\n\n"
+        + "  - urgence             : niveau d'urgence parmi \"normal\", \"urgent\", \"très urgent\", \"critique\".\n"
+        + "  - nom_client          : nom ou raison sociale de l'expéditeur (ex: \"Dupont BTP\"). \"\" si absent.\n"
+        + "  - email_client        : adresse email de l'expéditeur si présente dans l'e-mail. \"\" si absente.\n\n"
         + "Règles :\n"
         + "  - Ne pas extraire les produits (traités séparément).\n"
         + "  - Retourner UNIQUEMENT le JSON, sans texte avant ni après, sans markdown.";
@@ -268,14 +270,16 @@ public class ExtractInfoIA {
      */
     public record ProductInfo(String nom, String quantite, String unite, String details) {}
 
-    /** Métadonnées extraites de l'e-mail (budget, date de livraison, urgence). */
+    /** Métadonnées extraites de l'e-mail (budget, date, urgence, client). */
     public record MetadataInfo(
             Double budgetMontant,
             String budgetUnite,
             String budgetBrut,
             String dateLivraison,
             String dateLivraisonBrut,
-            String urgence) {}
+            String urgence,
+            String nomClient,
+            String emailClient) {}
 
     /**
      * Extrait les métadonnées de l'e-mail via le LLM : budget, date de livraison, urgence.
@@ -285,7 +289,7 @@ public class ExtractInfoIA {
      */
     public MetadataInfo extractMetadata(String email) {
         if (email == null || email.isBlank()) {
-            return new MetadataInfo(null, "", "", "", "", "normal");
+            return new MetadataInfo(null, "", "", "", "", "normal", "", "");
         }
 
         ObjectNode properties = objectMapper.createObjectNode();
@@ -295,6 +299,8 @@ public class ExtractInfoIA {
         properties.putObject("date_livraison").put("type", "string");
         properties.putObject("date_livraison_brut").put("type", "string");
         properties.putObject("urgence").put("type", "string");
+        properties.putObject("nom_client").put("type", "string");
+        properties.putObject("email_client").put("type", "string");
 
         ResponseFormatJsonSchema responseFormat = ResponseFormatJsonSchema.builder()
                 .jsonSchema(ResponseFormatJsonSchema.JsonSchema.builder()
@@ -305,7 +311,8 @@ public class ExtractInfoIA {
                                         objectMapper.convertValue(properties, Map.class)))
                                 .putAdditionalProperty("required", com.openai.core.JsonValue.from(List.of(
                                         "budget_montant", "budget_unite", "budget_brut",
-                                        "date_livraison", "date_livraison_brut", "urgence")))
+                                        "date_livraison", "date_livraison_brut", "urgence",
+                                        "nom_client", "email_client")))
                                 .putAdditionalProperty("additionalProperties", com.openai.core.JsonValue.from(false))
                                 .build())
                         .strict(true)
@@ -328,17 +335,20 @@ public class ExtractInfoIA {
 
             double montantRaw = root.path("budget_montant").asDouble(0.0);
             Double montant = montantRaw > 0 ? montantRaw : null;
-            String unite = root.path("budget_unite").asText("").trim();
+            String unite      = root.path("budget_unite").asText("").trim();
             String budgetBrut = root.path("budget_brut").asText("").trim();
-            String dateLiv = root.path("date_livraison").asText("").trim();
+            String dateLiv    = root.path("date_livraison").asText("").trim();
             String dateLivBrut = root.path("date_livraison_brut").asText("").trim();
-            String urgence = root.path("urgence").asText("normal").trim();
+            String urgence    = root.path("urgence").asText("normal").trim();
+            String nomClient  = root.path("nom_client").asText("").trim();
+            String emailClient = root.path("email_client").asText("").trim();
 
-            return new MetadataInfo(montant, unite, budgetBrut, dateLiv, dateLivBrut, urgence);
+            return new MetadataInfo(montant, unite, budgetBrut, dateLiv, dateLivBrut,
+                                    urgence, nomClient, emailClient);
 
         } catch (Exception e) {
             System.err.println("[ExtractInfoIA] Erreur extraction métadonnées : " + e.getMessage());
-            return new MetadataInfo(null, "", "", "", "", "normal");
+            return new MetadataInfo(null, "", "", "", "", "normal", "", "");
         }
     }
 

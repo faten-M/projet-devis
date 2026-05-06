@@ -321,13 +321,13 @@ public class Client {
     private int nombreCommandes;
 
     /** Liste des numéros de devis */
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "client_historique_devis", joinColumns = @JoinColumn(name = "client_id"))
     @Column(name = "quote_number", length = 100)
     private List<String> historiqueDevis;
 
     /** Notes internes */
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "client_notes", joinColumns = @JoinColumn(name = "client_id"))
     @Column(name = "note_text", length = 2000)
     private List<String> notes;
@@ -340,17 +340,13 @@ public class Client {
     /** Email d'origine (si créé à partir d'un email) */
     private String emailOrigine;
 
-    // === COMPTEUR POUR ID UNIQUE ===
-
-    private static int counter = 0;
-
     // === CONSTRUCTEURS ===
 
     /**
      * Constructeur par défaut.
      */
     public Client() {
-        this.clientId = generateClientId();
+        this.clientId = java.util.UUID.randomUUID().toString();
         this.dateCreation = LocalDateTime.now();
         this.dateModification = LocalDateTime.now();
         this.segment = Segment.PROSPECT;
@@ -391,15 +387,6 @@ public class Client {
     }
 
     // === GÉNÉRATION D'IDENTIFIANTS ===
-
-    /**
-     * Génère un identifiant client unique.
-     */
-    private static synchronized String generateClientId() {
-        counter++;
-        return String.format("CLI-%d-%04d",
-            System.currentTimeMillis() % 100000, counter);
-    }
 
     /**
      * Génère un numéro de compte client.

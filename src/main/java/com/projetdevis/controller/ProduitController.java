@@ -1,20 +1,21 @@
 package com.projetdevis.controller;
 
 import com.projetdevis.dto.ProduitRequest;
+import com.projetdevis.dto.ProduitResponse;
 import com.projetdevis.model.AnalyzedItem;
 import com.projetdevis.model.Produit;
 import com.projetdevis.repository.ProduitRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
-/**
- * Contrôleur REST pour la gestion du catalogue produits.
- *
- * GET  /api/produits       — liste tout le catalogue
- * POST /api/produits       — ajoute un nouveau produit
- */
+@Tag(name = "Produits", description = "Gestion du catalogue produits BTP")
 @RestController
 @RequestMapping("/api/produits")
 public class ProduitController {
@@ -25,28 +26,23 @@ public class ProduitController {
         this.produitRepository = produitRepository;
     }
 
-    /**
-     * Liste tous les produits du catalogue.
-     */
+    @Operation(summary = "Liste tout le catalogue", description = "Retourne tous les produits BTP disponibles dans le catalogue.")
     @GetMapping
-    public ResponseEntity<List<Produit>> getAllProduits() {
-        return ResponseEntity.ok(produitRepository.findAll());
+    public ResponseEntity<List<ProduitResponse>> getAllProduits() {
+        List<ProduitResponse> list = produitRepository.findAll().stream()
+                .map(ProduitResponse::from)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(list);
     }
 
-    /**
-     * Ajoute un nouveau produit au catalogue.
-     *
-     * Corps attendu :
-     * {
-     *   "nom": "Bureau assis-debout",
-     *   "categorie": "BUREAU",
-     *   "prixEconomique": 350.0,
-     *   "prixStandard": 700.0,
-     *   "prixPremium": 1400.0,
-     *   "description": "...",
-     *   "reference": "BUR-AD-001"
-     * }
-     */
+    @Operation(
+        summary = "Ajouter un produit",
+        description = "Ajoute un nouveau produit BTP au catalogue. Catégories valides : GROS_OEUVRE, SECOND_OEUVRE, COUVERTURE, CHARPENTE, PLOMBERIE, ELECTRICITE, VRD, ISOLATION, FINITION, AUTRE.",
+        responses = {
+            @ApiResponse(responseCode = "201", description = "Produit créé"),
+            @ApiResponse(responseCode = "400", description = "Données invalides ou catégorie inconnue")
+        }
+    )
     @PostMapping
     public ResponseEntity<?> addProduit(@RequestBody ProduitRequest request) {
 
@@ -82,6 +78,6 @@ public class ProduitController {
         produit.setReference(request.getReference());
 
         Produit saved = produitRepository.save(produit);
-        return ResponseEntity.status(201).body(saved);
+        return ResponseEntity.status(201).body(ProduitResponse.from(saved));
     }
 }

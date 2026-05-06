@@ -122,7 +122,7 @@ public class DraftQuote {
     // === ATTRIBUTS CONTENU ===
 
     /** Lignes du devis */
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "quote_number")
     private List<QuoteItem> items;
 
@@ -188,7 +188,7 @@ public class DraftQuote {
     private String warranty;
 
     /** Conditions particulières */
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "devis_special_conditions", joinColumns = @JoinColumn(name = "quote_number"))
     @Column(name = "condition_text", length = 2000)
     private List<String> specialConditions;
@@ -196,25 +196,25 @@ public class DraftQuote {
     // === ATTRIBUTS QUALITÉ ===
 
     /** Actions requises avant finalisation */
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "devis_required_actions", joinColumns = @JoinColumn(name = "quote_number"))
     @Column(name = "action_text", length = 2000)
     private List<String> requiredActions;
 
     /** Recommandations pour le commercial */
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "devis_recommendations", joinColumns = @JoinColumn(name = "quote_number"))
     @Column(name = "recommendation_text", length = 2000)
     private List<String> recommendations;
 
     /** Avertissements */
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "devis_warnings", joinColumns = @JoinColumn(name = "quote_number"))
     @Column(name = "warning_text", length = 2000)
     private List<String> warnings;
 
     /** Incohérences héritées de l'analyse */
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "devis_inconsistencies", joinColumns = @JoinColumn(name = "quote_number"))
     @Column(name = "inconsistency_text", length = 2000)
     private List<String> inconsistencies;
