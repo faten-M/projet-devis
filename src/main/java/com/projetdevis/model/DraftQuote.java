@@ -111,6 +111,9 @@ public class DraftQuote {
     /** Référence client (si connue) */
     private String clientReference;
 
+    /** Nom du client (copié au moment de la création pour affichage) */
+    private String clientNom;
+
     /** Statut du brouillon */
     @Enumerated(EnumType.STRING)
     private DraftStatus status;
@@ -384,6 +387,9 @@ public class DraftQuote {
         this.clientReference = clientReference;
         markModified();
     }
+
+    public String getClientNom() { return clientNom; }
+    public void setClientNom(String clientNom) { this.clientNom = clientNom; }
 
     public DraftStatus getStatus() {
         return status;
