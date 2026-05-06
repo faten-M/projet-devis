@@ -114,6 +114,9 @@ public class DraftQuote {
     /** Nom du client (copié au moment de la création pour affichage) */
     private String clientNom;
 
+    /** Email du client (copié au moment de la création pour affichage) */
+    private String clientEmail;
+
     /** Statut du brouillon */
     @Enumerated(EnumType.STRING)
     private DraftStatus status;
@@ -390,6 +393,9 @@ public class DraftQuote {
 
     public String getClientNom() { return clientNom; }
     public void setClientNom(String clientNom) { this.clientNom = clientNom; }
+
+    public String getClientEmail() { return clientEmail; }
+    public void setClientEmail(String clientEmail) { this.clientEmail = clientEmail; }
 
     public DraftStatus getStatus() {
         return status;

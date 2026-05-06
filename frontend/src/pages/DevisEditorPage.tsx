@@ -222,6 +222,11 @@ export default function DevisEditorPage() {
               <Descriptions.Item label="Client">
                 {devis.clientNom || <Text type="secondary">Non détecté</Text>}
               </Descriptions.Item>
+              <Descriptions.Item label="Email">
+                {devis.clientEmail
+                  ? <a href={`mailto:${devis.clientEmail}`}>{devis.clientEmail}</a>
+                  : <Text type="secondary">Non détecté</Text>}
+              </Descriptions.Item>
               <Descriptions.Item label="Priorité">
                 {devis.priority || '—'}
               </Descriptions.Item>
@@ -338,17 +343,19 @@ export default function DevisEditorPage() {
               size="large"
               icon={<CheckOutlined />}
               loading={saving}
+              disabled={devis.status === 'Prêt' || devis.status === 'Rejeté'}
               onClick={() => valider('PRET')}
             >
-              Valider le devis
+              {devis.status === 'Prêt' ? 'Déjà validé' : 'Valider le devis'}
             </Button>
             <Button
               danger
               size="large"
               icon={<CloseOutlined />}
+              disabled={devis.status === 'Rejeté'}
               onClick={() => setRejectModal(true)}
             >
-              Rejeter
+              {devis.status === 'Rejeté' ? 'Devis rejeté' : 'Rejeter'}
             </Button>
           </Space>
 

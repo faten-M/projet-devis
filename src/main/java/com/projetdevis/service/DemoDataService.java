@@ -178,6 +178,7 @@ public class DemoDataService {
         d.setConfidence(confidence);
         d.setClientReference(client.getClientId());
         d.setClientNom(client.getRaisonSociale());
+        d.setClientEmail(client.getEmailOrigine());
         d.setTvaRate(20.0);
         d.setItems(items);
         d.setRequiredActions(requiredActions);

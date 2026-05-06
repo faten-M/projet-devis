@@ -23,6 +23,7 @@ public class DevisResponse {
     private String priority;
     private String subject;
     private String clientNom;
+    private String clientEmail;
 
     // --- Financier ---
     private Double totalHT;
@@ -99,6 +100,7 @@ public class DevisResponse {
         r.priority       = draft.getPriority() != null ? draft.getPriority().getLabel() : null;
         r.subject        = draft.getSubject();
         r.clientNom      = draft.getClientNom();
+        r.clientEmail    = draft.getClientEmail();
 
         r.totalHT        = draft.getTotalHT();
         r.totalTVA       = draft.getTotalTVA();
@@ -133,6 +135,7 @@ public class DevisResponse {
     public String        getPriority()             { return priority; }
     public String        getSubject()              { return subject; }
     public String        getClientNom()            { return clientNom; }
+    public String        getClientEmail()          { return clientEmail; }
     public Double        getTotalHT()              { return totalHT; }
     public Double        getTotalTVA()             { return totalTVA; }
     public double        getTvaRate()              { return tvaRate; }

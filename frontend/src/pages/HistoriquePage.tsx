@@ -2,10 +2,13 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Tabs, Table, Tag, Input, Select, Typography,
-  message, Space, Badge, Descriptions, Spin
+  message, Space, Badge, Descriptions, Spin, DatePicker
 } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import type { Devis, Client } from '../types/api'
+import type { Dayjs } from 'dayjs'
+
+const { RangePicker } = DatePicker
 
 const { Title, Text } = Typography
 const { Search } = Input
@@ -27,6 +30,7 @@ function HistoriqueTab() {
   const [loading, setLoading]       = useState(true)
   const [searchClient, setSearch]   = useState('')
   const [filterStatus, setStatus]   = useState<string | null>(null)
+  const [dateRange, setDateRange]   = useState<[Dayjs, Dayjs] | null>(null)
 
   useEffect(() => {
     fetch('/api/devis')
@@ -47,8 +51,16 @@ function HistoriqueTab() {
     if (filterStatus) {
       result = result.filter(d => d.status === filterStatus)
     }
+    if (dateRange) {
+      const [start, end] = dateRange
+      result = result.filter(d => {
+        if (!d.createdAt) return false
+        const date = new Date(d.createdAt).getTime()
+        return date >= start.startOf('day').valueOf() && date <= end.endOf('day').valueOf()
+      })
+    }
     setFiltered(result)
-  }, [searchClient, filterStatus, devis])
+  }, [searchClient, filterStatus, dateRange, devis])
 
   const columns: ColumnsType<Devis> = [
     {
@@ -113,8 +125,13 @@ function HistoriqueTab() {
         <Search
           placeholder="Rechercher par client ou n° devis"
           allowClear
-          style={{ width: 280 }}
+          style={{ width: 260 }}
           onChange={e => setSearch(e.target.value)}
+        />
+        <RangePicker
+          placeholder={['Date début', 'Date fin']}
+          format="DD/MM/YYYY"
+          onChange={v => setDateRange(v as [Dayjs, Dayjs] | null)}
         />
         <Select
           placeholder="Filtrer par statut"

@@ -17,6 +17,7 @@ export interface Devis {
   priority: string
   subject: string
   clientNom: string | null
+  clientEmail: string | null
   totalHT: number | null
   totalTTC: number | null
   tvaRate: number
