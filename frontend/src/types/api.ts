@@ -1,0 +1,40 @@
+export interface QuoteItem {
+  lineNumber: number
+  designation: string
+  quantity: number
+  unitPriceHT: number | null
+  discountPercent: number | null
+  totalPriceHT: number | null
+  category: string
+  status: string
+}
+
+export interface Devis {
+  quoteNumber: string
+  createdAt: string
+  validUntil: string
+  status: string
+  priority: string
+  subject: string
+  clientNom: string | null
+  totalHT: number | null
+  totalTTC: number | null
+  tvaRate: number
+  clientBudget: number | null
+  confidence: number
+  items: QuoteItem[]
+  requiredActions: string[]
+  recommendations: string[]
+  warnings: string[]
+  inconsistencies: string[]
+}
+
+export interface Client {
+  clientId: string
+  raisonSociale: string
+  emailOrigine: string | null
+  segment: string | null
+  status: string | null
+  nombreCommandes: number
+  historiqueDevis: string[]
+}
