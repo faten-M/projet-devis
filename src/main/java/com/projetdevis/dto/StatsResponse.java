@@ -15,6 +15,8 @@ public class StatsResponse {
     private long   totalClients;
     private long   totalProduits;
     private double tauxConfidenceMoyen;
+    private double tauxValidation;
+    private double tempsMoyenValidationMinutes;
 
     // === Getters / Setters ===
 
@@ -38,4 +40,10 @@ public class StatsResponse {
 
     public double getTauxConfidenceMoyen()         { return tauxConfidenceMoyen; }
     public void   setTauxConfidenceMoyen(double v) { this.tauxConfidenceMoyen = v; }
+
+    public double getTauxValidation()              { return tauxValidation; }
+    public void   setTauxValidation(double v)      { this.tauxValidation = v; }
+
+    public double getTempsMoyenValidationMinutes()         { return tempsMoyenValidationMinutes; }
+    public void   setTempsMoyenValidationMinutes(double v) { this.tempsMoyenValidationMinutes = v; }
 }
