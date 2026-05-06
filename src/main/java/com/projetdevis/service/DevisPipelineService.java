@@ -166,6 +166,7 @@ public class DevisPipelineService {
         }
         clientRepository.save(client);
         draft.setClientReference(client.getClientId());
+        draft.setClientNom(client.getRaisonSociale());
 
         // Étape 6 — Sauvegarde du devis en base de données
         quoteRepository.save(draft);
