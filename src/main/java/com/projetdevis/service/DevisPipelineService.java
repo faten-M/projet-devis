@@ -10,7 +10,6 @@ import com.projetdevis.model.QuoteItem;
 import com.projetdevis.repository.ClientRepository;
 import com.projetdevis.repository.DraftQuoteRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
@@ -28,32 +27,28 @@ import java.util.Optional;
 @Service
 public class DevisPipelineService {
 
-    private final EmailCleanerService  cleanerService;
-    private final AnalysisService      analysisService;
-    private final DraftService         draftService;
-    private final DraftQuoteRepository quoteRepository;
-    private final ClientRepository     clientRepository;
-
-    // ExtractInfoIA créé à la demande : nécessite OPENAI_API_KEY au runtime.
-    private ExtractInfoIA extractInfoIA;
+    private final EmailCleanerService    cleanerService;
+    private final AnalysisService        analysisService;
+    private final DraftService           draftService;
+    private final ExtractInfoIA          extractInfoIA;
+    private final DevisSauvegardeService sauvegardeService;
+    private final ClientRepository       clientRepository;
+    private final DraftQuoteRepository   quoteRepository;
 
     public DevisPipelineService(EmailCleanerService cleanerService,
                                 AnalysisService analysisService,
                                 DraftService draftService,
-                                DraftQuoteRepository quoteRepository,
-                                ClientRepository clientRepository) {
+                                ExtractInfoIA extractInfoIA,
+                                DevisSauvegardeService sauvegardeService,
+                                ClientRepository clientRepository,
+                                DraftQuoteRepository quoteRepository) {
         this.cleanerService    = cleanerService;
         this.analysisService   = analysisService;
         this.draftService      = draftService;
-        this.quoteRepository   = quoteRepository;
+        this.extractInfoIA     = extractInfoIA;
+        this.sauvegardeService = sauvegardeService;
         this.clientRepository  = clientRepository;
-    }
-
-    private ExtractInfoIA getExtractInfoIA() {
-        if (extractInfoIA == null) {
-            extractInfoIA = new ExtractInfoIA();
-        }
-        return extractInfoIA;
+        this.quoteRepository   = quoteRepository;
     }
 
     /**
@@ -133,15 +128,11 @@ public class DevisPipelineService {
      * @return devis brouillon généré
      * @throws IllegalStateException si la variable d'environnement OPENAI_API_KEY est absente
      */
-    @Transactional
     public DraftQuote process(String rawEmail) {
-        // Étape 1 — Nettoyage
+        // ── Phase 1 : appels IA (pas de transaction ouverte) ──────────
         String cleaned = cleanerService.clean(rawEmail);
-
-        // Étape 2 — Extraction LLM : métadonnées + produits
-        ExtractInfoIA ia = getExtractInfoIA();
-        ExtractInfoIA.MetadataInfo meta = ia.extractMetadata(cleaned);
-        ExtractedInfo extracted = buildExtractedInfo(cleaned, ia, meta);
+        ExtractInfoIA.MetadataInfo meta = extractInfoIA.extractMetadata(cleaned);
+        ExtractedInfo extracted = buildExtractedInfo(cleaned, extractInfoIA, meta);
 
         // Étape 3 — Analyse et classification
         AnalyzedInfo analyzed = analysisService.analyze(extracted);
@@ -164,13 +155,10 @@ public class DevisPipelineService {
         if (!client.getHistoriqueDevis().contains(draft.getQuoteNumber())) {
             client.getHistoriqueDevis().add(draft.getQuoteNumber());
         }
-        clientRepository.save(client);
         draft.setClientReference(client.getClientId());
 
-        // Étape 6 — Sauvegarde du devis en base de données
-        quoteRepository.save(draft);
-
-        return draft;
+        // ── Phase 2 : sauvegarde atomique — transaction ouverte uniquement ici
+        return sauvegardeService.sauvegarder(client, draft);
     }
 
     /**

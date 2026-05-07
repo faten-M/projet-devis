@@ -9,6 +9,8 @@ import com.openai.models.ResponseFormatJsonSchema;
 import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
 
+import org.springframework.stereotype.Service;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,6 +24,7 @@ import java.util.regex.Pattern;
  *  - extractMetadata() : extrait budget, date de livraison et urgence via LLM.
  *  - parseQuantity() : convertit les quantités floues en entiers.
  */
+@Service
 public class ExtractInfoIA {
 
     // ── Modèle ───────────────────────────────────────────────────────────────
