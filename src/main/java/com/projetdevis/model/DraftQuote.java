@@ -114,6 +114,10 @@ public class DraftQuote {
     /** Nom du client (copié au moment de la création pour affichage) */
     private String clientNom;
 
+    /** Texte brut de l'email original reçu */
+    @Column(columnDefinition = "TEXT")
+    private String emailOriginal;
+
     /** Email du client (copié au moment de la création pour affichage) */
     private String clientEmail;
 
@@ -396,6 +400,9 @@ public class DraftQuote {
 
     public String getClientEmail() { return clientEmail; }
     public void setClientEmail(String clientEmail) { this.clientEmail = clientEmail; }
+
+    public String getEmailOriginal() { return emailOriginal; }
+    public void setEmailOriginal(String emailOriginal) { this.emailOriginal = emailOriginal; }
 
     public DraftStatus getStatus() {
         return status;

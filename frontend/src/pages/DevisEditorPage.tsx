@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Card, Row, Col, Table, InputNumber, Button, Tag, Alert,
-  Typography, Space, Divider, Statistic, Modal, Input,
-  message, Spin, Descriptions, List
+  Typography, Space, Statistic, Modal, Input,
+  message, Spin, Descriptions, List, Collapse
 } from 'antd'
+import { MailOutlined } from '@ant-design/icons'
 import {
   ArrowLeftOutlined, CheckOutlined, CloseOutlined,
   WarningOutlined, InfoCircleOutlined
@@ -335,6 +336,31 @@ export default function DevisEditorPage() {
               </Col>
             </Row>
           </Card>
+
+          {/* Email original */}
+          {devis.emailOriginal && (
+            <Collapse
+              style={{ marginBottom: 16 }}
+              items={[{
+                key: '1',
+                label: <Space><MailOutlined /> Email original du client</Space>,
+                children: (
+                  <pre style={{
+                    whiteSpace: 'pre-wrap',
+                    fontFamily: 'inherit',
+                    margin: 0,
+                    background: '#fafafa',
+                    padding: 12,
+                    borderRadius: 6,
+                    fontSize: 13,
+                    lineHeight: 1.6,
+                  }}>
+                    {devis.emailOriginal}
+                  </pre>
+                ),
+              }]}
+            />
+          )}
 
           {/* Boutons d'action */}
           <Space size="middle">

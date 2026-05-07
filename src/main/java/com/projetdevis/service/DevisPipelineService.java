@@ -168,6 +168,7 @@ public class DevisPipelineService {
         draft.setClientReference(client.getClientId());
         draft.setClientNom(client.getRaisonSociale());
         draft.setClientEmail(client.getEmailOrigine());
+        draft.setEmailOriginal(rawEmail);
 
         // Étape 6 — Sauvegarde du devis en base de données
         quoteRepository.save(draft);
