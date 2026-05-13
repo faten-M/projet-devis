@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,17 +45,7 @@ public class ProduitController {
         }
     )
     @PostMapping
-    public ResponseEntity<?> addProduit(@RequestBody ProduitRequest request) {
-
-        if (request.getNom() == null || request.getNom().isBlank()) {
-            return ResponseEntity.badRequest().body("Le champ 'nom' est obligatoire.");
-        }
-        if (request.getCategorie() == null) {
-            return ResponseEntity.badRequest().body("Le champ 'categorie' est obligatoire.");
-        }
-        if (request.getPrixStandard() == null || request.getPrixStandard() <= 0) {
-            return ResponseEntity.badRequest().body("Le champ 'prixStandard' doit être > 0.");
-        }
+    public ResponseEntity<?> addProduit(@Valid @RequestBody ProduitRequest request) {
 
         // Convertir la catégorie (String → enum)
         AnalyzedItem.Category categorie;

@@ -1,5 +1,9 @@
 package com.projetdevis.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+
 /**
  * Corps de la requête POST /api/produits.
  *
@@ -7,22 +11,18 @@ package com.projetdevis.dto;
  */
 public class ProduitRequest {
 
-    /** Nom lisible du produit (ex : "Bureau assis-debout") */
+    @NotBlank(message = "Le champ 'nom' est obligatoire.")
     private String nom;
 
-    /**
-     * Catégorie : BUREAU | SIEGE | RANGEMENT | TABLE |
-     *             ECLAIRAGE | ACCESSOIRE | ESPACE_DETENTE | CLOISON | AUTRE
-     */
+    @NotBlank(message = "Le champ 'categorie' est obligatoire.")
     private String categorie;
 
-    /** Prix HT entrée de gamme */
     private Double prixEconomique;
 
-    /** Prix HT intermédiaire */
+    @NotNull(message = "Le champ 'prixStandard' est obligatoire.")
+    @Positive(message = "Le champ 'prixStandard' doit être supérieur à 0.")
     private Double prixStandard;
 
-    /** Prix HT haut de gamme */
     private Double prixPremium;
 
     /** Description courte (optionnel) */
