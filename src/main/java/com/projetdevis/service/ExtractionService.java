@@ -2,6 +2,7 @@ package com.projetdevis.service;
 
 import com.projetdevis.model.ExtractedInfo;
 import com.projetdevis.model.ItemRequest;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -10,7 +11,14 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Service
 public class ExtractionService {
+
+    private final ExtractInfoIA quantityIA;
+
+    public ExtractionService(ExtractInfoIA quantityIA) {
+        this.quantityIA = quantityIA;
+    }
 
     private static final Pattern ITEM_LINE_PATTERN = Pattern.compile(
         "(?im)^\\s*"
@@ -147,15 +155,6 @@ public class ExtractionService {
     );
     private final ExtractInfoIA quantityIA;
 
-    // Constructeur normal 
-    public ExtractionService() {
-        this.quantityIA = new ExtractInfoIA();
-    }
-
-// Constructeur pour les tests 
-    public ExtractionService(ExtractInfoIA quantityIA) {
-        this.quantityIA = quantityIA;
-    }
 
     public ExtractedInfo extract(String cleanedEmail) {
         ExtractedInfo info = new ExtractedInfo(cleanedEmail);

@@ -7,6 +7,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+
 /**
  * Représente une fiche client dans le système CRM.
  *
@@ -21,6 +24,8 @@ import java.util.Objects;
  * @author BMAD Pipeline - Étape 7
  * @version 1.0
  */
+@Entity
+@Table(name = "clients")
 public class Client {
 
     // === ÉNUMÉRATIONS ===
@@ -225,6 +230,7 @@ public class Client {
     // === ATTRIBUTS IDENTIFICATION ===
 
     /** Identifiant unique du client */
+    @Id
     private String clientId;
 
     /** Numéro de compte client */
@@ -247,13 +253,16 @@ public class Client {
 
     // === ATTRIBUTS COORDONNÉES ===
 
-    /** Adresse du siège */
+    /** Adresse du siège (non persistée — à compléter ultérieurement) */
+    @Transient
     private Adresse adresseSiege;
 
-    /** Adresse de facturation */
+    /** Adresse de facturation (non persistée) */
+    @Transient
     private Adresse adresseFacturation;
 
-    /** Adresse de livraison */
+    /** Adresse de livraison (non persistée) */
+    @Transient
     private Adresse adresseLivraison;
 
     /** Téléphone principal */
@@ -262,15 +271,18 @@ public class Client {
     /** Site web */
     private String siteWeb;
 
-    /** Liste des contacts */
+    /** Liste des contacts (non persistée — à compléter ultérieurement) */
+    @Transient
     private List<Contact> contacts;
 
     // === ATTRIBUTS COMMERCIAUX ===
 
     /** Segment client */
+    @Enumerated(EnumType.STRING)
     private Segment segment;
 
     /** Statut client */
+    @Enumerated(EnumType.STRING)
     private Status status;
 
     /** Commercial attitré */
@@ -309,9 +321,15 @@ public class Client {
     private int nombreCommandes;
 
     /** Liste des numéros de devis */
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "client_historique_devis", joinColumns = @JoinColumn(name = "client_id"))
+    @Column(name = "quote_number", length = 100)
     private List<String> historiqueDevis;
 
     /** Notes internes */
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "client_notes", joinColumns = @JoinColumn(name = "client_id"))
+    @Column(name = "note_text", length = 2000)
     private List<String> notes;
 
     // === ATTRIBUTS ORIGINE ===
@@ -322,17 +340,13 @@ public class Client {
     /** Email d'origine (si créé à partir d'un email) */
     private String emailOrigine;
 
-    // === COMPTEUR POUR ID UNIQUE ===
-
-    private static int counter = 0;
-
     // === CONSTRUCTEURS ===
 
     /**
      * Constructeur par défaut.
      */
     public Client() {
-        this.clientId = generateClientId();
+        this.clientId = java.util.UUID.randomUUID().toString();
         this.dateCreation = LocalDateTime.now();
         this.dateModification = LocalDateTime.now();
         this.segment = Segment.PROSPECT;
@@ -373,15 +387,6 @@ public class Client {
     }
 
     // === GÉNÉRATION D'IDENTIFIANTS ===
-
-    /**
-     * Génère un identifiant client unique.
-     */
-    private static synchronized String generateClientId() {
-        counter++;
-        return String.format("CLI-%d-%04d",
-            System.currentTimeMillis() % 100000, counter);
-    }
 
     /**
      * Génère un numéro de compte client.
@@ -521,6 +526,7 @@ public class Client {
         }
     }
 
+    @JsonIgnore
     public Contact getContactPrincipal() {
         return contacts.stream()
             .filter(Contact::isPrincipal)
@@ -700,6 +706,7 @@ public class Client {
      *
      * @return true si prospect
      */
+    @JsonIgnore
     public boolean isProspect() {
         return segment == Segment.PROSPECT || nombreCommandes == 0;
     }
@@ -709,6 +716,7 @@ public class Client {
      *
      * @return true si un email est disponible
      */
+    @JsonIgnore
     public boolean hasEmail() {
         Contact principal = getContactPrincipal();
         return principal != null && principal.getEmail() != null;
@@ -716,9 +724,8 @@ public class Client {
 
     /**
      * Retourne l'email du contact principal.
-     *
-     * @return Email ou null
      */
+    @JsonIgnore
     public String getEmail() {
         Contact principal = getContactPrincipal();
         return principal != null ? principal.getEmail() : null;
@@ -729,6 +736,7 @@ public class Client {
      *
      * @return true si le client peut commander
      */
+    @JsonIgnore
     public boolean canOrder() {
         if (status == Status.BLOQUE || status == Status.ARCHIVE) {
             return false;
@@ -739,11 +747,7 @@ public class Client {
         return true;
     }
 
-    /**
-     * Calcule le crédit disponible.
-     *
-     * @return Crédit disponible ou null si pas de plafond
-     */
+    @JsonIgnore
     public Double getCreditDisponible() {
         if (plafondCredit == null) return null;
         double encours = encoursActuel != null ? encoursActuel : 0;
@@ -755,6 +759,7 @@ public class Client {
      *
      * @return Nom commercial ou raison sociale
      */
+    @JsonIgnore
     public String getNomAffichage() {
         return nomCommercial != null ? nomCommercial : raisonSociale;
     }
@@ -784,26 +789,19 @@ public class Client {
      *
      * @return Date formatée
      */
+    @JsonIgnore
     public String getFormattedDateCreation() {
         if (dateCreation == null) return "N/A";
         return dateCreation.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
     }
 
-    /**
-     * Retourne le chiffre d'affaires formaté.
-     *
-     * @return CA formaté
-     */
+    @JsonIgnore
     public String getFormattedCA() {
         if (chiffreAffairesCumule == null) return "0,00 €";
         return String.format("%,.2f €", chiffreAffairesCumule);
     }
 
-    /**
-     * Génère un résumé de la fiche client.
-     *
-     * @return Résumé textuel
-     */
+    @JsonIgnore
     public String getSummary() {
         StringBuilder sb = new StringBuilder();
 

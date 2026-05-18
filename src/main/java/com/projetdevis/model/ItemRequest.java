@@ -38,6 +38,9 @@ public class ItemRequest {
     /** Quantité demandée (null si non spécifiée) */
     private Integer quantity;
 
+    /** Unité de mesure (m², tonne, sac, ml, m³, palette, u…) */
+    private String unite;
+
     /** Dimensions sous forme de texte (ex: "160x80cm", "2m x 1m") */
     private String dimensions;
 
@@ -94,6 +97,14 @@ public class ItemRequest {
 
     public void setQuantity(Integer quantity) {
         this.quantity = quantity;
+    }
+
+    public String getUnite() {
+        return unite;
+    }
+
+    public void setUnite(String unite) {
+        this.unite = unite;
     }
 
     public String getDimensions() {

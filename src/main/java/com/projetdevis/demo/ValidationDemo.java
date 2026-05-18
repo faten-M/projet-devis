@@ -247,21 +247,21 @@ public class ValidationDemo {
         int line1 = validationService.addItem(
             "Repose-pieds ergonomique",
             20, 45.0,
-            AnalyzedItem.Category.ACCESSOIRE
+            AnalyzedItem.Category.AUTRE
         );
         System.out.println("Ajouté ligne " + line1 + " : Repose-pieds ergonomique x20");
 
         int line2 = validationService.addItem(
             "Tapis de souris ergonomique avec repose-poignet",
             20, 25.0,
-            AnalyzedItem.Category.ACCESSOIRE
+            AnalyzedItem.Category.AUTRE
         );
         System.out.println("Ajouté ligne " + line2 + " : Tapis de souris x20");
 
         int line3 = validationService.addItem(
             "Support écran réglable",
             20, 75.0,
-            AnalyzedItem.Category.ACCESSOIRE
+            AnalyzedItem.Category.AUTRE
         );
         System.out.println("Ajouté ligne " + line3 + " : Support écran x20");
 
@@ -411,3 +411,4 @@ public class ValidationDemo {
         return draftService.generateDraft(analyzed);
     }
 }
+

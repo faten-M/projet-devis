@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import jakarta.persistence.*;
+
 /**
  * Représente une ligne du brouillon de devis.
  *
@@ -19,6 +21,8 @@ import java.util.Objects;
  * @author BMAD Pipeline - Étape 5
  * @version 1.0
  */
+@Entity
+@Table(name = "quote_items")
 public class QuoteItem {
 
     // === ÉNUMÉRATIONS ===
@@ -74,6 +78,10 @@ public class QuoteItem {
 
     // === ATTRIBUTS ===
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     /** Numéro de ligne (position dans le devis) */
     private int lineNumber;
 
@@ -87,6 +95,7 @@ public class QuoteItem {
     private String description;
 
     /** Catégorie du produit */
+    @Enumerated(EnumType.STRING)
     private AnalyzedItem.Category category;
 
     /** Quantité */
@@ -111,9 +120,11 @@ public class QuoteItem {
     private double tvaRate;
 
     /** Gamme de prix */
+    @Enumerated(EnumType.STRING)
     private PriceRange priceRange;
 
     /** Statut de la ligne */
+    @Enumerated(EnumType.STRING)
     private LineStatus status;
 
     /** Remise applicable (pourcentage) */
@@ -123,18 +134,31 @@ public class QuoteItem {
     private Integer deliveryDays;
 
     /** Options disponibles */
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "quote_item_options", joinColumns = @JoinColumn(name = "item_id"))
+    @Column(name = "option_text", length = 1000)
     private List<String> options;
 
     /** Alternatives suggérées */
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "quote_item_alternatives", joinColumns = @JoinColumn(name = "item_id"))
+    @Column(name = "alternative_text", length = 1000)
     private List<String> alternatives;
 
     /** Notes internes pour le commercial */
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "quote_item_notes", joinColumns = @JoinColumn(name = "item_id"))
+    @Column(name = "note_text", length = 2000)
     private List<String> internalNotes;
 
     /** Avertissements à afficher */
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "quote_item_warnings", joinColumns = @JoinColumn(name = "item_id"))
+    @Column(name = "warning_text", length = 1000)
     private List<String> warnings;
 
-    /** Article source (AnalyzedItem) */
+    /** Article source (AnalyzedItem, non persisté) */
+    @Transient
     private AnalyzedItem sourceItem;
 
     /** Confiance dans l'estimation de prix */
@@ -174,6 +198,9 @@ public class QuoteItem {
             this.designation = buildDesignation(source);
             this.description = buildDescription(source);
             this.reference = generateReference(source, lineNumber);
+            if (source.getUnite() != null && !source.getUnite().isBlank()) {
+                this.unit = source.getUnite();
+            }
         }
     }
 
@@ -234,15 +261,16 @@ public class QuoteItem {
      */
     private String generateReference(AnalyzedItem item, int lineNum) {
         String catCode = switch (item.getCategory()) {
-            case BUREAU -> "BUR";
-            case SIEGE -> "SIG";
-            case RANGEMENT -> "RNG";
-            case TABLE -> "TAB";
-            case ECLAIRAGE -> "ECL";
-            case ACCESSOIRE -> "ACC";
-            case ESPACE_DETENTE -> "DET";
-            case CLOISON -> "CLO";
-            case AUTRE -> "DIV";
+            case GROS_OEUVRE   -> "GRO";
+            case SECOND_OEUVRE -> "SEC";
+            case COUVERTURE    -> "COV";
+            case CHARPENTE     -> "CHA";
+            case PLOMBERIE     -> "PLO";
+            case ELECTRICITE   -> "ELE";
+            case VRD           -> "VRD";
+            case ISOLATION     -> "ISO";
+            case FINITION      -> "FIN";
+            case AUTRE         -> "DIV";
         };
         return String.format("%s-%03d", catCode, lineNum);
     }

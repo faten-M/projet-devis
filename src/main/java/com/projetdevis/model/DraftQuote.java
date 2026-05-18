@@ -10,6 +10,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import jakarta.persistence.*;
+
 /**
  * Représente un brouillon de devis généré à partir de l'analyse.
  *
@@ -25,6 +27,8 @@ import java.util.stream.Collectors;
  * @author BMAD Pipeline - Étape 5
  * @version 1.0
  */
+@Entity
+@Table(name = "devis")
 public class DraftQuote {
 
     // === ÉNUMÉRATIONS ===
@@ -86,6 +90,7 @@ public class DraftQuote {
     // === ATTRIBUTS EN-TÊTE ===
 
     /** Numéro unique du devis */
+    @Id
     private String quoteNumber;
 
     /** Date de création du brouillon */
@@ -107,17 +112,22 @@ public class DraftQuote {
     private String clientReference;
 
     /** Statut du brouillon */
+    @Enumerated(EnumType.STRING)
     private DraftStatus status;
 
     /** Priorité */
+    @Enumerated(EnumType.STRING)
     private Priority priority;
 
     // === ATTRIBUTS CONTENU ===
 
     /** Lignes du devis */
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "quote_number")
     private List<QuoteItem> items;
 
-    /** Sections regroupant les lignes par catégorie */
+    /** Sections regroupant les lignes par catégorie (calculé, non persisté) */
+    @Transient
     private Map<AnalyzedItem.Category, List<QuoteItem>> sections;
 
     // === ATTRIBUTS FINANCIERS ===
@@ -178,29 +188,46 @@ public class DraftQuote {
     private String warranty;
 
     /** Conditions particulières */
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "devis_special_conditions", joinColumns = @JoinColumn(name = "quote_number"))
+    @Column(name = "condition_text", length = 2000)
     private List<String> specialConditions;
 
     // === ATTRIBUTS QUALITÉ ===
 
     /** Actions requises avant finalisation */
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "devis_required_actions", joinColumns = @JoinColumn(name = "quote_number"))
+    @Column(name = "action_text", length = 2000)
     private List<String> requiredActions;
 
     /** Recommandations pour le commercial */
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "devis_recommendations", joinColumns = @JoinColumn(name = "quote_number"))
+    @Column(name = "recommendation_text", length = 2000)
     private List<String> recommendations;
 
     /** Avertissements */
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "devis_warnings", joinColumns = @JoinColumn(name = "quote_number"))
+    @Column(name = "warning_text", length = 2000)
     private List<String> warnings;
 
     /** Incohérences héritées de l'analyse */
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "devis_inconsistencies", joinColumns = @JoinColumn(name = "quote_number"))
+    @Column(name = "inconsistency_text", length = 2000)
     private List<String> inconsistencies;
 
     /** Confiance globale dans le brouillon */
     private double confidence;
 
-    /** Source AnalyzedInfo */
+    /** Source AnalyzedInfo (non persistée) */
+    @Transient
     private AnalyzedInfo sourceAnalysis;
 
-    /** Statistiques de génération */
+    /** Statistiques de génération (non persistées) */
+    @Transient
     private DraftStats stats;
 
     // === CLASSE INTERNE : STATISTIQUES ===
@@ -227,6 +254,19 @@ public class DraftQuote {
                 sectionsCount, warningsCount, actionsRequired, generationTimeMs
             );
         }
+    }
+
+    // === CYCLE DE VIE JPA ===
+
+    /**
+     * Appelé par JPA après chargement depuis la base.
+     * Reconstruit la map sections (champ @Transient) à partir de la liste items.
+     */
+    @PostLoad
+    private void onPostLoad() {
+        if (sections == null) sections = new HashMap<>();
+        rebuildSections();
+        if (stats == null) stats = new DraftStats();
     }
 
     // === CONSTRUCTEURS ===

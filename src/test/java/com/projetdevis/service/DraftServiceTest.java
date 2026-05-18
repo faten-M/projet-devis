@@ -64,36 +64,36 @@ class DraftServiceTest {
     // ── Grille tarifaire ─────────────────────────────────────────────────────
 
     @Test
-    void generateDraft_bureauStandard_prixUnitaire450() {
+    void generateDraft_grosOeuvreStandard_prixUnitaire18() {
         AnalyzedInfo analysis = new AnalyzedInfo();
-        analysis.addItem(buildItem("bureau", 1, AnalyzedItem.Category.BUREAU));
+        analysis.addItem(buildItem("ciment", 1, AnalyzedItem.Category.GROS_OEUVRE));
 
         DraftQuote draft = service.generateDraft(analysis);
 
         assertFalse(draft.getItems().isEmpty(),
                 "Le brouillon doit contenir au moins un article");
-        assertEquals(450.0, draft.getItems().get(0).getUnitPriceHT(), 0.01,
-                "Le prix standard d'un bureau est 450 € (grille tarifaire)");
+        assertEquals(18.0, draft.getItems().get(0).getUnitPriceHT(), 0.01,
+                "Le prix standard du gros œuvre est 18 € (grille tarifaire BTP)");
     }
 
     // ── Calcul des totaux ─────────────────────────────────────────────────────
 
     @Test
-    void generateDraft_deuxBureaux_totalHTEgal900() {
+    void generateDraft_deuxSacsCiment_totalHTEgal36() {
         AnalyzedInfo analysis = new AnalyzedInfo();
-        analysis.addItem(buildItem("bureau", 2, AnalyzedItem.Category.BUREAU));
+        analysis.addItem(buildItem("ciment", 2, AnalyzedItem.Category.GROS_OEUVRE));
 
         DraftQuote draft = service.generateDraft(analysis);
 
         assertNotNull(draft.getTotalHT(), "Le total HT ne doit pas être null");
-        assertEquals(900.0, draft.getTotalHT(), 0.01,
-                "2 bureaux × 450 € = 900 € HT");
+        assertEquals(36.0, draft.getTotalHT(), 0.01,
+                "2 sacs × 18 € = 36 € HT");
     }
 
     @Test
     void generateDraft_totalTTC_correspond_totalHT_fois_1point20() {
         AnalyzedInfo analysis = new AnalyzedInfo();
-        analysis.addItem(buildItem("fauteuil", 1, AnalyzedItem.Category.SIEGE));
+        analysis.addItem(buildItem("tuile", 1, AnalyzedItem.Category.COUVERTURE));
 
         DraftQuote draft = service.generateDraft(analysis);
 

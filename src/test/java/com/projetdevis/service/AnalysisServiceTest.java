@@ -45,13 +45,13 @@ class AnalysisServiceTest {
 
     /**
      * Source de données : (produit, catégorie attendue).
-     * Les 3 cas couvrent les catégories les plus fréquentes du catalogue.
+     * Les 3 cas couvrent les catégories BTP les plus fréquentes.
      */
     static Stream<Arguments> produitsConnus() {
         return Stream.of(
-            Arguments.of("bureau en chêne",       AnalyzedItem.Category.BUREAU),
-            Arguments.of("chaise ergonomique",    AnalyzedItem.Category.SIEGE),
-            Arguments.of("armoire de rangement",  AnalyzedItem.Category.RANGEMENT)
+            Arguments.of("ciment CEM II 32,5",    AnalyzedItem.Category.GROS_OEUVRE),
+            Arguments.of("tuile terre cuite",      AnalyzedItem.Category.COUVERTURE),
+            Arguments.of("plaque de plâtre",       AnalyzedItem.Category.SECOND_OEUVRE)
         );
     }
 

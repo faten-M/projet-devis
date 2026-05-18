@@ -4,6 +4,8 @@ import com.projetdevis.model.AnalyzedInfo;
 import com.projetdevis.model.AnalyzedItem;
 import com.projetdevis.model.DraftQuote;
 import com.projetdevis.model.QuoteItem;
+import com.projetdevis.repository.ProduitRepository;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -24,7 +26,33 @@ import java.util.*;
  * @author BMAD Pipeline - Étape 5
  * @version 1.0
  */
+@Service
 public class DraftService {
+
+    private final ProduitRepository produitRepository;
+
+    /** Constructeur Spring : injecte le repository catalogue. */
+    public DraftService(ProduitRepository produitRepository) {
+        this.produitRepository = produitRepository;
+    }
+
+    /** Constructeur standalone pour démos / tests (utilise les prix codés en dur). */
+    public DraftService() {
+        this.produitRepository = null;
+    }
+
+    /**
+     * Retourne les prix [économique, standard, premium] pour une catégorie.
+     * Essaie d'abord le catalogue en base, puis se replie sur PRICE_GRID.
+     */
+    private double[] getPricesForCategory(AnalyzedItem.Category category) {
+        if (produitRepository != null) {
+            return produitRepository.findFirstByCategorie(category)
+                .map(p -> new double[]{p.getPrixEconomique(), p.getPrixStandard(), p.getPrixPremium()})
+                .orElseGet(() -> PRICE_GRID.getOrDefault(category, PRICE_GRID.get(AnalyzedItem.Category.AUTRE)));
+        }
+        return PRICE_GRID.getOrDefault(category, PRICE_GRID.get(AnalyzedItem.Category.AUTRE));
+    }
 
     // === CONSTANTES ===
 
@@ -55,29 +83,30 @@ public class DraftService {
     private static final Map<AnalyzedItem.Category, double[]> PRICE_GRID = new HashMap<>();
 
     static {
-        // [économique, standard, premium]
-        PRICE_GRID.put(AnalyzedItem.Category.BUREAU, new double[]{250, 450, 800});
-        PRICE_GRID.put(AnalyzedItem.Category.SIEGE, new double[]{150, 350, 650});
-        PRICE_GRID.put(AnalyzedItem.Category.RANGEMENT, new double[]{200, 400, 700});
-        PRICE_GRID.put(AnalyzedItem.Category.TABLE, new double[]{300, 600, 1200});
-        PRICE_GRID.put(AnalyzedItem.Category.ECLAIRAGE, new double[]{50, 120, 250});
-        PRICE_GRID.put(AnalyzedItem.Category.ACCESSOIRE, new double[]{30, 80, 150});
-        PRICE_GRID.put(AnalyzedItem.Category.ESPACE_DETENTE, new double[]{400, 800, 1500});
-        PRICE_GRID.put(AnalyzedItem.Category.CLOISON, new double[]{150, 300, 500});
-        PRICE_GRID.put(AnalyzedItem.Category.AUTRE, new double[]{100, 200, 400});
+        // [économique, standard, premium] — prix indicatifs par unité de vente courante
+        PRICE_GRID.put(AnalyzedItem.Category.GROS_OEUVRE,   new double[]{ 6,   18,   45});
+        PRICE_GRID.put(AnalyzedItem.Category.SECOND_OEUVRE, new double[]{ 8,   16,   28});
+        PRICE_GRID.put(AnalyzedItem.Category.COUVERTURE,    new double[]{22,   38,   65});
+        PRICE_GRID.put(AnalyzedItem.Category.CHARPENTE,     new double[]{ 5,   12,   28});
+        PRICE_GRID.put(AnalyzedItem.Category.PLOMBERIE,     new double[]{ 8,   22,   55});
+        PRICE_GRID.put(AnalyzedItem.Category.ELECTRICITE,   new double[]{ 5,   16,   42});
+        PRICE_GRID.put(AnalyzedItem.Category.VRD,           new double[]{14,   32,   68});
+        PRICE_GRID.put(AnalyzedItem.Category.ISOLATION,     new double[]{ 8,   18,   38});
+        PRICE_GRID.put(AnalyzedItem.Category.FINITION,      new double[]{10,   26,   58});
+        PRICE_GRID.put(AnalyzedItem.Category.AUTRE,         new double[]{10,   25,   50});
     }
 
     // === MOTS-CLÉS POUR ESTIMATION DE GAMME ===
 
     private static final Set<String> PREMIUM_KEYWORDS = new HashSet<>(Arrays.asList(
-        "ergonomique", "cuir", "executive", "direction", "haut de gamme",
-        "design", "premium", "luxe", "noyer", "chêne massif", "réglable électrique",
-        "assis-debout", "mesh", "herman miller", "steelcase"
+        "haute résistance", "hr", "52,5", "premier choix", "certifié",
+        "nf", "traité autoclave", "classe a", "haute performance",
+        "technique", "structural", "armé", "précontraint"
     ));
 
     private static final Set<String> ECONOMIQUE_KEYWORDS = new HashSet<>(Arrays.asList(
-        "basique", "simple", "standard", "entrée de gamme", "économique",
-        "plastique", "mélaminé", "visiteur", "empilable"
+        "standard", "courant", "second choix", "allégé", "basique",
+        "classe b", "tout venant", "recyclé"
     ));
 
     // === OPTIONS PAR CATÉGORIE ===
@@ -85,29 +114,32 @@ public class DraftService {
     private static final Map<AnalyzedItem.Category, List<String>> CATEGORY_OPTIONS = new HashMap<>();
 
     static {
-        CATEGORY_OPTIONS.put(AnalyzedItem.Category.BUREAU, Arrays.asList(
-            "Passe-câbles intégré",
-            "Trappe d'accès câblage",
-            "Plateau réglable en hauteur",
-            "Extension de plateau"
+        CATEGORY_OPTIONS.put(AnalyzedItem.Category.GROS_OEUVRE, Arrays.asList(
+            "Livraison sur chantier en vrac",
+            "Livraison en big-bag (1 tonne)",
+            "Certificat de conformité CE fourni",
+            "Fiche technique et fiche sécurité"
         ));
-        CATEGORY_OPTIONS.put(AnalyzedItem.Category.SIEGE, Arrays.asList(
-            "Accoudoirs réglables 3D/4D",
-            "Appui-tête ajustable",
-            "Support lombaire ajustable",
-            "Roulettes sol dur/moquette"
+        CATEGORY_OPTIONS.put(AnalyzedItem.Category.COUVERTURE, Arrays.asList(
+            "Sous-toiture fournie",
+            "Accessoires de rive et faîtière inclus",
+            "Film d'étanchéité inclus",
+            "Pose sur liteau"
         ));
-        CATEGORY_OPTIONS.put(AnalyzedItem.Category.RANGEMENT, Arrays.asList(
-            "Serrure à clé",
-            "Serrure à code",
-            "Roulettes de déplacement",
-            "Tablettes supplémentaires"
+        CATEGORY_OPTIONS.put(AnalyzedItem.Category.PLOMBERIE, Arrays.asList(
+            "Joints et colliers de fixation inclus",
+            "Coudes et manchons fournis",
+            "Test d'étanchéité"
         ));
-        CATEGORY_OPTIONS.put(AnalyzedItem.Category.TABLE, Arrays.asList(
-            "Connectique intégrée (HDMI, USB, prises)",
-            "Plateau rabattable",
-            "Pied central rotatif",
-            "Système de câblage escamotable"
+        CATEGORY_OPTIONS.put(AnalyzedItem.Category.ELECTRICITE, Arrays.asList(
+            "Dominos de connexion fournis",
+            "Gaines de protection incluses",
+            "Certification NFC 15-100"
+        ));
+        CATEGORY_OPTIONS.put(AnalyzedItem.Category.ISOLATION, Arrays.asList(
+            "Pare-vapeur inclus",
+            "Fixations et vis spéciales fournies",
+            "Bande de rive étanche"
         ));
     }
 
@@ -216,9 +248,9 @@ public class DraftService {
             }
         }
 
-        String catText = categories.isEmpty() ? "mobilier" : String.join(", ", categories);
+        String catText = categories.isEmpty() ? "matériaux" : String.join(", ", categories);
 
-        return String.format("Devis mobilier de bureau - %d articles (%d unités) : %s",
+        return String.format("Devis matériaux de construction - %d référence(s) (%d unités) : %s",
             itemCount, totalQty, catText);
     }
 
@@ -296,30 +328,52 @@ public class DraftService {
     }
 
     /**
-     * Suggère des alternatives pour l'article.
+     * Suggère des alternatives pour les matériaux de construction.
      */
     private void suggestAlternatives(QuoteItem quoteItem, AnalyzedItem analyzedItem) {
         AnalyzedItem.Category category = analyzedItem.getCategory();
-
         switch (category) {
-            case BUREAU:
-                quoteItem.addAlternative("Bureau fixe (économie ~30%)");
-                quoteItem.addAlternative("Bureau bench (pour open space)");
+            case GROS_OEUVRE:
+                quoteItem.addAlternative("Béton prêt à l'emploi livré toupie (gain de temps)");
+                quoteItem.addAlternative("Parpaing allégé (-20% poids, même résistance)");
                 break;
-            case SIEGE:
-                quoteItem.addAlternative("Version sans accoudoirs (-15%)");
-                quoteItem.addAlternative("Siège direction (upgrade)");
+            case COUVERTURE:
+                quoteItem.addAlternative("Tuile béton (économie ~20% vs tuile terre cuite)");
+                quoteItem.addAlternative("Bac acier isolant (pose rapide, garantie 30 ans)");
                 break;
-            case RANGEMENT:
-                quoteItem.addAlternative("Caisson sur roulettes");
-                quoteItem.addAlternative("Armoire haute (+50% stockage)");
+            case CHARPENTE:
+                quoteItem.addAlternative("Lamellé-collé (portée plus grande)");
+                quoteItem.addAlternative("Charpente métallique (délai raccourci)");
                 break;
-            case TABLE:
-                quoteItem.addAlternative("Table pliante (gain de place)");
-                quoteItem.addAlternative("Table connectée (avec prises)");
+            case PLOMBERIE:
+                quoteItem.addAlternative("PVC pression (économie ~30%)");
+                quoteItem.addAlternative("Multicouche gainé (facilité de pose)");
+                break;
+            case ELECTRICITE:
+                quoteItem.addAlternative("Câble rigide U-1000 R2V (plus économique)");
+                quoteItem.addAlternative("Câble souple H07RN-F (environnement humide)");
+                break;
+            case ISOLATION:
+                quoteItem.addAlternative("Laine de roche (meilleure résistance au feu)");
+                quoteItem.addAlternative("Polystyrène expansé (léger, économique)");
+                break;
+            case FINITION:
+                quoteItem.addAlternative("Carrelage grès cérame (durabilité supérieure)");
+                quoteItem.addAlternative("Revêtement vinyle (pose rapide, moins cher)");
                 break;
             default:
                 break;
+        }
+    }
+
+    // === ESTIMATION DES PRIX ===
+
+    /**
+     * Estime les prix pour tous les articles du brouillon.
+     */
+    private void estimatePrices(DraftQuote draft, AnalyzedInfo analysis) {
+        for (QuoteItem item : draft.getItems()) {
+            estimateItemPrice(item);
         }
     }
 
@@ -327,33 +381,17 @@ public class DraftService {
      * Génère des notes internes pour le commercial.
      */
     private void generateInternalNotes(QuoteItem quoteItem, AnalyzedItem analyzedItem) {
-        // Note sur la quantité
         if (analyzedItem.getQuantity() != null && analyzedItem.getQuantity() >= 10) {
-            quoteItem.addInternalNote("Volume important - Remise possible (5-15%)");
+            quoteItem.addInternalNote("Volume important — remise négociable (5-15%)");
         }
-
-        // Note sur la fusion
         if (analyzedItem.isMerged()) {
             quoteItem.addInternalNote(String.format(
                 "Article fusionné (%d références similaires regroupées)",
                 analyzedItem.getMergedCount()
             ));
         }
-
-        // Note sur la confiance
         if (analyzedItem.getConfidence() < 0.6) {
-            quoteItem.addInternalNote("Confiance faible - Vérifier avec le client");
-        }
-    }
-
-    // === ESTIMATION DES PRIX ===
-
-    /**
-     * Estime les prix pour tous les articles.
-     */
-    private void estimatePrices(DraftQuote draft, AnalyzedInfo analysis) {
-        for (QuoteItem item : draft.getItems()) {
-            estimateItemPrice(item);
+            quoteItem.addInternalNote("Confiance faible — vérifier la désignation avec le client");
         }
     }
 
@@ -372,9 +410,8 @@ public class DraftService {
         QuoteItem.PriceRange priceRange = determinePriceRange(source);
         item.setPriceRange(priceRange);
 
-        // Récupération du prix de base
-        double[] prices = PRICE_GRID.getOrDefault(source.getCategory(),
-            PRICE_GRID.get(AnalyzedItem.Category.AUTRE));
+        // Récupération du prix de base depuis le catalogue (base de données)
+        double[] prices = getPricesForCategory(source.getCategory());
 
         double basePrice;
         double confidence;
@@ -468,27 +505,25 @@ public class DraftService {
 
         String searchText = buildSearchText(item);
 
-        // Ajustements positifs
-        if (searchText.contains("électrique") || searchText.contains("motorisé")) {
-            adjustedPrice *= 1.5;
-        }
-        if (searchText.contains("cuir")) {
-            adjustedPrice *= 1.3;
-        }
-        if (searchText.contains("ergonomique")) {
-            adjustedPrice *= 1.2;
-        }
-        if (searchText.contains("design") || searchText.contains("designer")) {
-            adjustedPrice *= 1.25;
+        // Haute résistance / classe supérieure : +30 %
+        if (searchText.contains("haute résistance") || searchText.contains("hr")
+                || searchText.contains("52,5")) {
+            adjustedPrice *= 1.30;
         }
 
-        // Ajustements selon les dimensions
-        if (item.getDimensions() != null) {
-            String dims = item.getDimensions().toLowerCase();
-            // Grande taille = prix plus élevé
-            if (dims.contains("200") || dims.contains("280") || dims.contains("300")) {
-                adjustedPrice *= 1.2;
-            }
+        // Produit traité (autoclave, hydrofuge…) : +20 %
+        if (searchText.contains("traité") || searchText.contains("hydrofuge")) {
+            adjustedPrice *= 1.20;
+        }
+
+        // Certifié / norme NF : +10 %
+        if (searchText.contains("certifié") || searchText.contains("nf")) {
+            adjustedPrice *= 1.10;
+        }
+
+        // Produit allégé / recyclé : -10 %
+        if (searchText.contains("allégé") || searchText.contains("recyclé")) {
+            adjustedPrice *= 0.90;
         }
 
         return Math.round(adjustedPrice * 100.0) / 100.0;
@@ -624,9 +659,9 @@ public class DraftService {
         // Recommandations selon les catégories
         Map<AnalyzedItem.Category, List<QuoteItem>> sections = draft.getSections();
 
-        if (sections.containsKey(AnalyzedItem.Category.SIEGE) &&
-            sections.containsKey(AnalyzedItem.Category.BUREAU)) {
-            draft.addRecommendation("Pack bureau + siège : proposer une offre groupée (-5%)");
+        if (sections.containsKey(AnalyzedItem.Category.GROS_OEUVRE) &&
+            sections.containsKey(AnalyzedItem.Category.SECOND_OEUVRE)) {
+            draft.addRecommendation("Gros œuvre + Second œuvre : proposer une offre groupée chantier complet");
         }
 
         // Recommandations selon la confiance

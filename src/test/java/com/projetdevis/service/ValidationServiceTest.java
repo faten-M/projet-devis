@@ -47,7 +47,7 @@ class ValidationServiceTest {
         item.setDesignation("Bureau standard");
         item.setQuantity(2);
         item.setUnitPriceHT(450.0);            // déclenche updateCalculatedPrices()
-        item.setCategory(AnalyzedItem.Category.BUREAU);
+        item.setCategory(AnalyzedItem.Category.GROS_OEUVRE);
         item.setReference("BUR-001");
         item.setStatus(QuoteItem.LineStatus.A_VALIDER);
 
