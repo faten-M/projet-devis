@@ -8,7 +8,7 @@ import {
 import { MailOutlined } from '@ant-design/icons'
 import {
   ArrowLeftOutlined, CheckOutlined, CloseOutlined,
-  WarningOutlined, InfoCircleOutlined
+  WarningOutlined, InfoCircleOutlined, FilePdfOutlined
 } from '@ant-design/icons'
 import type { Devis, QuoteItem } from '../types/api'
 
@@ -382,6 +382,13 @@ export default function DevisEditorPage() {
               onClick={() => setRejectModal(true)}
             >
               {devis.status === 'Rejeté' ? 'Devis rejeté' : 'Rejeter'}
+            </Button>
+            <Button
+              size="large"
+              icon={<FilePdfOutlined />}
+              onClick={() => window.open(`/api/devis/${quoteNumber}/pdf`, '_blank')}
+            >
+              Télécharger le PDF
             </Button>
           </Space>
 

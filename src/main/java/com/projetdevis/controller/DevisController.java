@@ -5,11 +5,14 @@ import com.projetdevis.dto.DevisResponse;
 import com.projetdevis.dto.ValiderRequest;
 import com.projetdevis.model.DraftQuote;
 import com.projetdevis.service.DevisPipelineService;
+import com.projetdevis.service.PdfService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,9 +25,11 @@ import java.util.stream.Collectors;
 public class DevisController {
 
     private final DevisPipelineService pipelineService;
+    private final PdfService           pdfService;
 
-    public DevisController(DevisPipelineService pipelineService) {
+    public DevisController(DevisPipelineService pipelineService, PdfService pdfService) {
         this.pipelineService = pipelineService;
+        this.pdfService      = pdfService;
     }
 
     @Operation(
@@ -88,6 +93,30 @@ public class DevisController {
         return pipelineService.findByQuoteNumber(quoteNumber)
                 .map(DevisResponse::from)
                 .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @Operation(
+        summary = "Télécharger le PDF d'un devis",
+        description = "Génère et retourne un PDF prêt à envoyer au client.",
+        responses = {
+            @ApiResponse(responseCode = "200", description = "PDF généré"),
+            @ApiResponse(responseCode = "404", description = "Devis introuvable")
+        }
+    )
+    @GetMapping("/devis/{quoteNumber}/pdf")
+    public ResponseEntity<byte[]> telechargerPdf(
+            @Parameter(description = "Numéro du devis", example = "DEV-20260504-1234")
+            @PathVariable String quoteNumber) {
+        return pipelineService.findByQuoteNumber(quoteNumber)
+                .map(devis -> {
+                    byte[] pdf = pdfService.genererPdfDevis(devis);
+                    return ResponseEntity.ok()
+                            .header(HttpHeaders.CONTENT_DISPOSITION,
+                                    "attachment; filename=\"devis-" + quoteNumber + ".pdf\"")
+                            .contentType(MediaType.APPLICATION_PDF)
+                            .body(pdf);
+                })
                 .orElse(ResponseEntity.notFound().build());
     }
 }
