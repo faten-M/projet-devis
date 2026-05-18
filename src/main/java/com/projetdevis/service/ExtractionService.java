@@ -153,6 +153,7 @@ public class ExtractionService {
         "meuble", "meubles", "mobilier", "cloison", "cloisons",
         "panneau", "panneaux", "tiroir", "tiroirs", "bibliothèque", "bibliothèques"
     );
+    private final ExtractInfoIA quantityIA;
 
 
     public ExtractedInfo extract(String cleanedEmail) {
@@ -172,6 +173,7 @@ public class ExtractionService {
 
         return info;
     }
+   
 
     private void extractItems(String text, ExtractedInfo info) {
         Set<String> processedLines = new HashSet<>();
