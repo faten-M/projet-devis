@@ -224,11 +224,13 @@ public class DevisPipelineService {
     }
 
     /** Recherche un devis par son numéro. */
+    @Transactional(readOnly = true)
     public Optional<DraftQuote> findByQuoteNumber(String quoteNumber) {
         return quoteRepository.findById(quoteNumber);
     }
 
     /** Retourne tous les devis sauvegardés. */
+    @Transactional(readOnly = true)
     public List<DraftQuote> findAll() {
         return quoteRepository.findAll();
     }

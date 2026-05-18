@@ -199,8 +199,23 @@ export default function DevisEditorPage() {
     || (devis.requiredActions?.length ?? 0) > 0
     || (devis.inconsistencies?.length ?? 0) > 0
 
+  const estExpire = devis.validUntil
+    ? new Date(devis.validUntil) < new Date()
+    : false
+
   return (
     <div style={{ padding: 24, background: '#f5f5f5', minHeight: '100vh' }}>
+
+      {/* Avertissement expiration */}
+      {estExpire && (
+        <Alert
+          type="error"
+          showIcon
+          message="Devis expiré"
+          description={`Ce devis a expiré le ${new Date(devis.validUntil!).toLocaleDateString('fr-FR')} — il ne peut plus être envoyé au client. Vous pouvez le dupliquer ou le revalider.`}
+          style={{ marginBottom: 16 }}
+        />
+      )}
 
       {/* En-tête */}
       <Space style={{ marginBottom: 20 }}>
