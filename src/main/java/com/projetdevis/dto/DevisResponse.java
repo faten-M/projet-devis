@@ -38,7 +38,7 @@ public class DevisResponse {
     private LocalDate requestedDeliveryDate;
 
     // --- Qualité ---
-    private double confidence;
+    private int confidence;
     private List<String> requiredActions;
     private List<String> recommendations;
     private List<String> warnings;
@@ -113,7 +113,7 @@ public class DevisResponse {
 
         r.requestedDeliveryDate = draft.getRequestedDeliveryDate();
 
-        r.confidence       = draft.getConfidence();
+        r.confidence       = (int) Math.round(draft.getConfidence() * 100);
         r.requiredActions  = draft.getRequiredActions();
         r.recommendations  = draft.getRecommendations();
         r.warnings         = draft.getWarnings();
@@ -146,7 +146,7 @@ public class DevisResponse {
     public Double        getClientBudget()         { return clientBudget; }
     public Boolean       isBudgetRespected()       { return budgetRespected; }
     public LocalDate     getRequestedDeliveryDate(){ return requestedDeliveryDate; }
-    public double        getConfidence()           { return confidence; }
+    public int           getConfidence()           { return confidence; }
     public List<String>  getRequiredActions()      { return requiredActions; }
     public List<String>  getRecommendations()      { return recommendations; }
     public List<String>  getWarnings()             { return warnings; }
