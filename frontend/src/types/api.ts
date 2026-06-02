@@ -31,6 +31,18 @@ export interface Devis {
   inconsistencies: string[]
 }
 
+export interface Stats {
+  totalDevis: number
+  montantTotalHT: number
+  montantMoyenHT: number
+  devisParStatut: Record<string, number>
+  totalClients: number
+  totalProduits: number
+  tauxConfidenceMoyen: number
+  tauxValidation: number
+  tempsMoyenValidationMinutes: number
+}
+
 export interface Client {
   clientId: string
   raisonSociale: string
