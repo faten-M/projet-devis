@@ -29,8 +29,11 @@ export default function InboxPage() {
   const fetchDevis = () => {
     setLoading(true)
     fetch('/api/devis')
-      .then(r => r.json())
-      .then((data: Devis[]) => setDevis(data))
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`)
+        return r.json()
+      })
+      .then((data: unknown) => setDevis(Array.isArray(data) ? data as Devis[] : []))
       .catch(() => message.error('Impossible de charger les devis'))
       .finally(() => setLoading(false))
   }
