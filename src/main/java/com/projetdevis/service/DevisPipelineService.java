@@ -28,7 +28,7 @@ import java.util.Optional;
 @Service
 public class DevisPipelineService {
 
-    private final EmailCleanerService  cleanerService;
+    private final EmailCleanerIA       cleanerService;
     private final AnalysisService      analysisService;
     private final DraftService         draftService;
     private final DraftQuoteRepository quoteRepository;
@@ -37,7 +37,7 @@ public class DevisPipelineService {
     // ExtractInfoIA créé à la demande : nécessite OPENAI_API_KEY au runtime.
     private ExtractInfoIA extractInfoIA;
 
-    public DevisPipelineService(EmailCleanerService cleanerService,
+    public DevisPipelineService(EmailCleanerIA cleanerService,
                                 AnalysisService analysisService,
                                 DraftService draftService,
                                 DraftQuoteRepository quoteRepository,

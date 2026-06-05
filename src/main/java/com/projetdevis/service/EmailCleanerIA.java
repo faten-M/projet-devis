@@ -7,11 +7,13 @@ import com.openai.models.chat.completions.ChatCompletionCreateParams;
 
 import java.util.List;
 
+import org.springframework.stereotype.Service;
+
 /**
  * Service de nettoyage des emails par IA (OpenAI).
  *
  * Remplace entièrement les regex de EmailCleanerService par des appels au
- * modèle gpt-5-nano. Le prompt instruit le modèle de retourner uniquement
+ * modèle gpt-4o-mini. Le prompt instruit le modèle de retourner uniquement
  * le contenu utile de l'email, sans aucun ajout ni reformulation.
  *
  * Utilisation :
@@ -22,10 +24,11 @@ import java.util.List;
  * Prérequis :
  *   Variable d'environnement OPENAI_API_KEY définie.
  */
+@Service
 public class EmailCleanerIA {
 
     // Modèle cible
-    private static final String MODEL = "gpt-5-nano";
+    private static final String MODEL = "gpt-4o-mini";
 
     // Prompt système : instructions strictes pour le modèle
     private static final String SYSTEM_PROMPT =
