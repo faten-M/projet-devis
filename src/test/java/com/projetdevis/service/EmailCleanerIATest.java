@@ -219,7 +219,7 @@ class EmailCleanerIATest {
                         "Doit contenir la taille nettoyée"),
                 () -> assertTrue(stats.contains("EmailCleanerIA"),
                         "Doit mentionner EmailCleanerIA"),
-                () -> assertTrue(stats.contains("gpt-5-nano"),
+                () -> assertTrue(stats.contains("gpt-4o-mini"),
                         "Doit mentionner le modèle utilisé")
         );
     }
