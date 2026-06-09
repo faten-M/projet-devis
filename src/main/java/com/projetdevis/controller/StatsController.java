@@ -3,6 +3,7 @@ package com.projetdevis.controller;
 import com.projetdevis.dto.StatsResponse;
 import com.projetdevis.model.DraftQuote;
 import com.projetdevis.repository.ClientRepository;
+import com.projetdevis.repository.CorrectionIARepository;
 import com.projetdevis.repository.DraftQuoteRepository;
 import com.projetdevis.repository.ProduitRepository;
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,16 +23,19 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/stats")
 public class StatsController {
 
-    private final DraftQuoteRepository quoteRepository;
-    private final ClientRepository     clientRepository;
-    private final ProduitRepository    produitRepository;
+    private final DraftQuoteRepository   quoteRepository;
+    private final ClientRepository       clientRepository;
+    private final ProduitRepository      produitRepository;
+    private final CorrectionIARepository correctionRepository;
 
     public StatsController(DraftQuoteRepository quoteRepository,
                            ClientRepository clientRepository,
-                           ProduitRepository produitRepository) {
-        this.quoteRepository   = quoteRepository;
-        this.clientRepository  = clientRepository;
-        this.produitRepository = produitRepository;
+                           ProduitRepository produitRepository,
+                           CorrectionIARepository correctionRepository) {
+        this.quoteRepository    = quoteRepository;
+        this.clientRepository   = clientRepository;
+        this.produitRepository  = produitRepository;
+        this.correctionRepository = correctionRepository;
     }
 
     @Operation(
@@ -84,6 +88,19 @@ public class StatsController {
                 .average()
                 .orElse(0.0);
         stats.setTempsMoyenValidationMinutes(Math.round(tempsMoyen * 10.0) / 10.0);
+
+        // Corrections IA : nombre total + taux de précision
+        long totalCorrections = correctionRepository.count();
+        stats.setTotalCorrections(totalCorrections);
+
+        // Taux de précision = 100% si aucune correction, sinon basé sur lignes corrigées vs total lignes validées
+        long totalLignesValidees = allQuotes.stream()
+                .filter(q -> q.getStatus() == DraftQuote.DraftStatus.PRET)
+                .mapToLong(q -> q.getItems().size())
+                .sum();
+        double precision = totalLignesValidees == 0 ? 100.0
+                : Math.max(0.0, Math.round((1.0 - (double) totalCorrections / totalLignesValidees) * 1000.0) / 10.0);
+        stats.setTauxPrecisionIa(Math.min(100.0, precision));
 
         return ResponseEntity.ok(stats);
     }

@@ -42,6 +42,8 @@ export interface Stats {
   tauxConfidenceMoyen: number
   tauxValidation: number
   tempsMoyenValidationMinutes: number
+  totalCorrections: number
+  tauxPrecisionIa: number
 }
 
 export interface Client {

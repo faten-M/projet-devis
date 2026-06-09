@@ -20,6 +20,8 @@ const statsFixture: Stats = {
   tauxConfidenceMoyen: 0.74,   // stocké en 0-1 → doit afficher 74%
   tauxValidation: 18.2,
   tempsMoyenValidationMinutes: 45,
+  totalCorrections: 3,
+  tauxPrecisionIa: 85.0,
 }
 
 function renderDashboard() {

@@ -1,5 +1,7 @@
 package com.projetdevis.controller;
 
+import com.projetdevis.model.CorrectionIA;
+import com.projetdevis.repository.CorrectionIARepository;
 import com.projetdevis.repository.DraftQuoteRepository;
 import com.projetdevis.service.EmailReaderService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -8,11 +10,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Map;
 
 @Tag(name = "Admin", description = "Actions d'administration — réservées au développement et aux tests")
@@ -20,13 +24,16 @@ import java.util.Map;
 @RequestMapping("/api/admin")
 public class AdminController {
 
-    private final EmailReaderService  emailReaderService;
-    private final DraftQuoteRepository quoteRepository;
+    private final EmailReaderService     emailReaderService;
+    private final DraftQuoteRepository   quoteRepository;
+    private final CorrectionIARepository correctionRepository;
 
     public AdminController(EmailReaderService emailReaderService,
-                           DraftQuoteRepository quoteRepository) {
-        this.emailReaderService = emailReaderService;
-        this.quoteRepository    = quoteRepository;
+                           DraftQuoteRepository quoteRepository,
+                           CorrectionIARepository correctionRepository) {
+        this.emailReaderService   = emailReaderService;
+        this.quoteRepository      = quoteRepository;
+        this.correctionRepository = correctionRepository;
     }
 
     @Operation(
@@ -47,6 +54,12 @@ public class AdminController {
             "status", "supprimé",
             "quoteNumber", quoteNumber
         ));
+    }
+
+    @Operation(summary = "Liste toutes les corrections apportées par les commerciaux aux extractions IA")
+    @GetMapping("/corrections")
+    public ResponseEntity<List<CorrectionIA>> getCorrections() {
+        return ResponseEntity.ok(correctionRepository.findAllByOrderByCreatedAtDesc());
     }
 
     @Operation(

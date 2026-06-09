@@ -18,6 +18,9 @@ public class StatsResponse {
     private double tauxValidation;
     private double tempsMoyenValidationMinutes;
 
+    private long   totalCorrections;
+    private double tauxPrecisionIa;
+
     // === Getters / Setters ===
 
     public long   getTotalDevis()         { return totalDevis; }
@@ -46,4 +49,10 @@ public class StatsResponse {
 
     public double getTempsMoyenValidationMinutes()         { return tempsMoyenValidationMinutes; }
     public void   setTempsMoyenValidationMinutes(double v) { this.tempsMoyenValidationMinutes = v; }
+
+    public long   getTotalCorrections()          { return totalCorrections; }
+    public void   setTotalCorrections(long v)    { this.totalCorrections = v; }
+
+    public double getTauxPrecisionIa()           { return tauxPrecisionIa; }
+    public void   setTauxPrecisionIa(double v)   { this.tauxPrecisionIa = v; }
 }

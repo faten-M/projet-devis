@@ -3,11 +3,13 @@ package com.projetdevis.service;
 import com.projetdevis.dto.ValiderRequest;
 import com.projetdevis.model.AnalyzedInfo;
 import com.projetdevis.model.Client;
+import com.projetdevis.model.CorrectionIA;
 import com.projetdevis.model.DraftQuote;
 import com.projetdevis.model.ExtractedInfo;
 import com.projetdevis.model.ItemRequest;
 import com.projetdevis.model.QuoteItem;
 import com.projetdevis.repository.ClientRepository;
+import com.projetdevis.repository.CorrectionIARepository;
 import com.projetdevis.repository.DraftQuoteRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,11 +31,12 @@ import java.util.Optional;
 @Service
 public class DevisPipelineService {
 
-    private final EmailCleanerIA       cleanerService;
-    private final AnalysisService      analysisService;
-    private final DraftService         draftService;
-    private final DraftQuoteRepository quoteRepository;
-    private final ClientRepository     clientRepository;
+    private final EmailCleanerIA          cleanerService;
+    private final AnalysisService         analysisService;
+    private final DraftService            draftService;
+    private final DraftQuoteRepository    quoteRepository;
+    private final ClientRepository        clientRepository;
+    private final CorrectionIARepository  correctionRepository;
 
     // ExtractInfoIA créé à la demande : nécessite OPENAI_API_KEY au runtime.
     private ExtractInfoIA extractInfoIA;
@@ -42,12 +45,14 @@ public class DevisPipelineService {
                                 AnalysisService analysisService,
                                 DraftService draftService,
                                 DraftQuoteRepository quoteRepository,
-                                ClientRepository clientRepository) {
-        this.cleanerService    = cleanerService;
-        this.analysisService   = analysisService;
-        this.draftService      = draftService;
-        this.quoteRepository   = quoteRepository;
-        this.clientRepository  = clientRepository;
+                                ClientRepository clientRepository,
+                                CorrectionIARepository correctionRepository) {
+        this.cleanerService       = cleanerService;
+        this.analysisService      = analysisService;
+        this.draftService         = draftService;
+        this.quoteRepository      = quoteRepository;
+        this.clientRepository     = clientRepository;
+        this.correctionRepository = correctionRepository;
     }
 
     private ExtractInfoIA getExtractInfoIA() {
@@ -222,6 +227,31 @@ public class DevisPipelineService {
             java.util.Map<Integer, QuoteItem> byLine = new java.util.HashMap<>();
             for (QuoteItem qi : draft.getItems()) byLine.put(qi.getLineNumber(), qi);
 
+            // Enregistrement des corrections IA (avant la mise à jour)
+            for (ValiderRequest.ItemUpdate u : req.getItems()) {
+                QuoteItem existing = byLine.get(u.getLineNumber());
+                if (existing == null) continue;
+                if (u.getQuantity() != null && u.getQuantity() != existing.getQuantity()) {
+                    correctionRepository.save(correction(quoteNumber, u.getLineNumber(),
+                        CorrectionIA.ChampCorrige.QUANTITE,
+                        String.valueOf(existing.getQuantity()),
+                        String.valueOf(u.getQuantity())));
+                }
+                if (u.getUnitPriceHT() != null && existing.getUnitPriceHT() != null
+                        && !u.getUnitPriceHT().equals(existing.getUnitPriceHT())) {
+                    correctionRepository.save(correction(quoteNumber, u.getLineNumber(),
+                        CorrectionIA.ChampCorrige.PRIX_UNITAIRE,
+                        String.format("%.2f", existing.getUnitPriceHT()),
+                        String.format("%.2f", u.getUnitPriceHT())));
+                }
+                if (u.getDesignation() != null && !u.getDesignation().equals(existing.getDesignation())) {
+                    correctionRepository.save(correction(quoteNumber, u.getLineNumber(),
+                        CorrectionIA.ChampCorrige.DESIGNATION,
+                        existing.getDesignation(),
+                        u.getDesignation()));
+                }
+            }
+
             for (ValiderRequest.ItemUpdate u : req.getItems()) {
                 QuoteItem qi = byLine.get(u.getLineNumber());
                 if (qi == null) {
@@ -301,6 +331,18 @@ public class DevisPipelineService {
 
         quoteRepository.save(draft);
         return draft;
+    }
+
+    private CorrectionIA correction(String quoteNumber, Integer lineNumber,
+                                     CorrectionIA.ChampCorrige champ,
+                                     String valeurIa, String valeurCommerciale) {
+        CorrectionIA c = new CorrectionIA();
+        c.setQuoteNumber(quoteNumber);
+        c.setLineNumber(lineNumber);
+        c.setChamp(champ);
+        c.setValeurIa(valeurIa);
+        c.setValeurCommerciale(valeurCommerciale);
+        return c;
     }
 
     /** Recherche un devis par son numéro. */

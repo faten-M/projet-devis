@@ -3,6 +3,7 @@ import { Card, Col, Row, Statistic, Typography, Spin, message, Progress } from '
 import {
   FileTextOutlined, EuroOutlined, CheckCircleOutlined,
   RobotOutlined, TeamOutlined, AppstoreOutlined, ClockCircleOutlined,
+  EditOutlined,
 } from '@ant-design/icons'
 import {
   PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
@@ -229,8 +230,8 @@ export default function DashboardPage() {
         </Col>
 
         {/* Confidence progress bar */}
-        <Col xs={24}>
-          <Card title="Précision de l'IA (confiance moyenne)">
+        <Col xs={24} md={12}>
+          <Card title="Confiance IA (score moyen)">
             <Progress
               percent={confidencePct}
               strokeColor={
@@ -243,6 +244,43 @@ export default function DashboardPage() {
             />
             <Text type="secondary" style={{ display: 'block', marginTop: 8 }}>
               Score moyen de confiance sur l'ensemble des devis générés par l'IA.
+            </Text>
+          </Card>
+        </Col>
+
+        {/* Feedback loop — corrections commerciaux */}
+        <Col xs={24} md={12}>
+          <Card title={<span><EditOutlined style={{ color: '#fa8c16', marginRight: 6 }} />Feedback loop — corrections commerciaux</span>}>
+            <Row gutter={16}>
+              <Col span={12}>
+                <Statistic
+                  title="Corrections enregistrées"
+                  value={stats.totalCorrections}
+                  valueStyle={{ color: stats.totalCorrections > 0 ? '#fa8c16' : '#52c41a' }}
+                />
+              </Col>
+              <Col span={12}>
+                <Statistic
+                  title="Précision extraction IA"
+                  value={stats.tauxPrecisionIa}
+                  suffix="%"
+                  precision={1}
+                  valueStyle={{ color: stats.tauxPrecisionIa >= 80 ? '#52c41a' : stats.tauxPrecisionIa >= 60 ? '#fa8c16' : '#ff4d4f' }}
+                />
+              </Col>
+            </Row>
+            <Progress
+              percent={stats.tauxPrecisionIa}
+              strokeColor={
+                stats.tauxPrecisionIa >= 80 ? '#52c41a'
+                : stats.tauxPrecisionIa >= 60 ? '#fa8c16'
+                : '#ff4d4f'
+              }
+              style={{ marginTop: 12 }}
+              format={p => `${p}%`}
+            />
+            <Text type="secondary" style={{ display: 'block', marginTop: 8 }}>
+              % de lignes de devis validées sans correction par le commercial.
             </Text>
           </Card>
         </Col>

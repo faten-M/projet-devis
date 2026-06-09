@@ -19,6 +19,7 @@ const devisFixture: Devis = {
   totalTTC: 1800,
   tvaRate: 20,
   clientBudget: null,
+  requestedDeliveryDate: null,
   confidence: 85,
   items: [
     {
