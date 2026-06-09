@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Card, Row, Col, Table, InputNumber, Button, Tag, Alert,
-  Typography, Space, Statistic, Modal, Input,
+  Typography, Space, Statistic, Modal, Input, Select,
   message, Spin, Descriptions, List, Collapse, DatePicker
 } from 'antd'
 import dayjs from 'dayjs'
@@ -37,6 +37,9 @@ export default function DevisEditorPage() {
   const [saving, setSaving]             = useState(false)
   const [rejectModal, setRejectModal]   = useState(false)
   const [clientNom, setClientNom]       = useState<string>('')
+  const [priorite, setPriorite]         = useState<string>('')
+  const [budgetClient, setBudgetClient] = useState<number | null>(null)
+  const [sujetBesoin, setSujetBesoin]   = useState<string>('')
   const [deliveryDate, setDeliveryDate] = useState<dayjs.Dayjs | null>(null)
 
   useEffect(() => {
@@ -46,6 +49,9 @@ export default function DevisEditorPage() {
         setDevis(data)
         setItems(data.items ?? [])
         setClientNom(data.clientNom ?? '')
+        setPriorite(data.priority ? data.priority.toUpperCase() : 'NORMALE')
+        setBudgetClient(data.clientBudget ?? null)
+        setSujetBesoin(data.subject ?? '')
         setDeliveryDate(data.requestedDeliveryDate ? dayjs(data.requestedDeliveryDate) : null)
       })
       .catch(() => message.error('Impossible de charger le devis'))
@@ -88,6 +94,38 @@ export default function DevisEditorPage() {
     }])
   }
 
+  const sauvegarder = async () => {
+    setSaving(true)
+    try {
+      const res = await fetch(`/api/devis/${quoteNumber}/valider`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nomClient: clientNom.trim() || null,
+          priorite: priorite || null,
+          budgetClient: budgetClient,
+          sujetBesoin: sujetBesoin.trim() || null,
+          dateLivraison: deliveryDate ? deliveryDate.format('YYYY-MM-DD') : null,
+          items: items.map((it, idx) => ({
+            lineNumber:      it.lineNumber ?? idx + 1,
+            designation:     it.designation,
+            quantity:        it.quantity,
+            unitPriceHT:     it.unitPriceHT ?? 0,
+            discountPercent: it.discountPercent ?? 0,
+          })),
+        }),
+      })
+      if (!res.ok) { message.error('Erreur lors de la sauvegarde'); return }
+      const updated = await res.json()
+      setDevis(updated)
+      message.success('Modifications sauvegardées')
+    } catch {
+      message.error('Erreur réseau')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const valider = async (statut: 'PRET' | 'REJETE') => {
     setSaving(true)
     try {
@@ -100,6 +138,9 @@ export default function DevisEditorPage() {
           remiseGlobale: remise > 0 ? remise : null,
           conditionsPaiement: conditions || null,
           nomClient: clientNom.trim() || null,
+          priorite: priorite || null,
+          budgetClient: budgetClient,
+          sujetBesoin: sujetBesoin.trim() || null,
           dateLivraison: deliveryDate ? deliveryDate.format('YYYY-MM-DD') : null,
           items: items.map((it, idx) => ({
             lineNumber:      it.lineNumber ?? idx + 1,
@@ -275,10 +316,25 @@ export default function DevisEditorPage() {
                   : <Text type="secondary">Non détecté</Text>}
               </Descriptions.Item>
               <Descriptions.Item label="Priorité">
-                {devis.priority || '—'}
+                <Select
+                  value={priorite || 'Normale'}
+                  onChange={val => setPriorite(val)}
+                  style={{ width: 140 }}
+                  options={[
+                    { value: 'BASSE',    label: 'Basse' },
+                    { value: 'NORMALE',  label: 'Normale' },
+                    { value: 'HAUTE',    label: 'Haute' },
+                    { value: 'URGENTE',  label: 'Urgente' },
+                  ]}
+                />
               </Descriptions.Item>
               <Descriptions.Item label="Aperçu du besoin" span={2}>
-                {devis.subject || '—'}
+                <Input
+                  value={sujetBesoin}
+                  onChange={e => setSujetBesoin(e.target.value)}
+                  placeholder="Décrire le besoin du client"
+                  style={{ width: '100%' }}
+                />
               </Descriptions.Item>
               <Descriptions.Item label="Date de création">
                 {devis.createdAt ? new Date(devis.createdAt).toLocaleDateString('fr-FR') : '—'}
@@ -300,9 +356,14 @@ export default function DevisEditorPage() {
                 />
               </Descriptions.Item>
               <Descriptions.Item label="Budget client">
-                {devis.clientBudget
-                  ? `${devis.clientBudget.toLocaleString('fr-FR')} €`
-                  : <Text type="secondary">Non précisé</Text>}
+                <InputNumber
+                  value={budgetClient}
+                  onChange={val => setBudgetClient(val)}
+                  placeholder="Non précisé"
+                  min={0}
+                  addonAfter="€"
+                  style={{ width: 160 }}
+                />
               </Descriptions.Item>
             </Descriptions>
           </Card>
@@ -418,6 +479,13 @@ export default function DevisEditorPage() {
 
           {/* Boutons d'action */}
           <Space size="middle">
+            <Button
+              size="large"
+              loading={saving}
+              onClick={sauvegarder}
+            >
+              Sauvegarder les modifications
+            </Button>
             <Button
               type="primary"
               size="large"

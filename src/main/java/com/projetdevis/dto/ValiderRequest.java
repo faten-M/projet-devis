@@ -26,6 +26,15 @@ public class ValiderRequest {
     /** Nom du client saisi manuellement par le commercial */
     private String nomClient;
 
+    /** Priorité modifiée par le commercial */
+    private String priorite;
+
+    /** Budget client révisé après contact */
+    private Double budgetClient;
+
+    /** Aperçu du besoin révisé par le commercial */
+    private String sujetBesoin;
+
     /** Date de livraison corrigée manuellement (format ISO : YYYY-MM-DD) */
     private String dateLivraison;
 
@@ -67,6 +76,15 @@ public class ValiderRequest {
 
     public String getNomClient() { return nomClient; }
     public void setNomClient(String nomClient) { this.nomClient = nomClient; }
+
+    public String getPriorite() { return priorite; }
+    public void setPriorite(String priorite) { this.priorite = priorite; }
+
+    public Double getBudgetClient() { return budgetClient; }
+    public void setBudgetClient(Double budgetClient) { this.budgetClient = budgetClient; }
+
+    public String getSujetBesoin() { return sujetBesoin; }
+    public void setSujetBesoin(String sujetBesoin) { this.sujetBesoin = sujetBesoin; }
 
     public String getDateLivraison() { return dateLivraison; }
     public void setDateLivraison(String dateLivraison) { this.dateLivraison = dateLivraison; }

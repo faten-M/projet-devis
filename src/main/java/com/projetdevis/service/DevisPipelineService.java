@@ -282,6 +282,23 @@ public class DevisPipelineService {
             }
         }
 
+        // Priorité modifiée par le commercial
+        if (req.getPriorite() != null && !req.getPriorite().isBlank()) {
+            try {
+                draft.setPriority(DraftQuote.Priority.valueOf(req.getPriorite().trim().toUpperCase()));
+            } catch (IllegalArgumentException ignored) {}
+        }
+
+        // Budget client révisé
+        if (req.getBudgetClient() != null && req.getBudgetClient() > 0) {
+            draft.setClientBudget(req.getBudgetClient());
+        }
+
+        // Aperçu du besoin révisé
+        if (req.getSujetBesoin() != null && !req.getSujetBesoin().isBlank()) {
+            draft.setSubject(req.getSujetBesoin().trim());
+        }
+
         quoteRepository.save(draft);
         return draft;
     }
