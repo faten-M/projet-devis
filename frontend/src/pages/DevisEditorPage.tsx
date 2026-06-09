@@ -3,8 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom'
 import {
   Card, Row, Col, Table, InputNumber, Button, Tag, Alert,
   Typography, Space, Statistic, Modal, Input,
-  message, Spin, Descriptions, List, Collapse
+  message, Spin, Descriptions, List, Collapse, DatePicker
 } from 'antd'
+import dayjs from 'dayjs'
 import { MailOutlined } from '@ant-design/icons'
 import {
   ArrowLeftOutlined, CheckOutlined, CloseOutlined,
@@ -35,6 +36,8 @@ export default function DevisEditorPage() {
   const [conditions, setConditions]     = useState('')
   const [saving, setSaving]             = useState(false)
   const [rejectModal, setRejectModal]   = useState(false)
+  const [clientNom, setClientNom]       = useState<string>('')
+  const [deliveryDate, setDeliveryDate] = useState<dayjs.Dayjs | null>(null)
 
   useEffect(() => {
     fetch(`/api/devis/${quoteNumber}`)
@@ -42,6 +45,8 @@ export default function DevisEditorPage() {
       .then((data: Devis) => {
         setDevis(data)
         setItems(data.items ?? [])
+        setClientNom(data.clientNom ?? '')
+        setDeliveryDate(data.requestedDeliveryDate ? dayjs(data.requestedDeliveryDate) : null)
       })
       .catch(() => message.error('Impossible de charger le devis'))
       .finally(() => setLoading(false))
@@ -94,6 +99,15 @@ export default function DevisEditorPage() {
           commentaire,
           remiseGlobale: remise > 0 ? remise : null,
           conditionsPaiement: conditions || null,
+          nomClient: clientNom.trim() || null,
+          dateLivraison: deliveryDate ? deliveryDate.format('YYYY-MM-DD') : null,
+          items: items.map((it, idx) => ({
+            lineNumber:      it.lineNumber ?? idx + 1,
+            designation:     it.designation,
+            quantity:        it.quantity,
+            unitPriceHT:     it.unitPriceHT ?? 0,
+            discountPercent: it.discountPercent ?? 0,
+          })),
         }),
       })
       if (!res.ok) {
@@ -122,7 +136,19 @@ export default function DevisEditorPage() {
       title: 'Désignation',
       dataIndex: 'designation',
       key: 'designation',
-      render: (v: string) => <Text>{v}</Text>,
+      render: (v: string, _: QuoteItem, index: number) => (
+        <Input
+          value={v}
+          onChange={e => {
+            setItems(prev => {
+              const next = [...prev]
+              next[index] = { ...next[index], designation: e.target.value }
+              return next
+            })
+          }}
+          style={{ minWidth: 160 }}
+        />
+      ),
     },
     {
       title: 'Catégorie',
@@ -236,7 +262,12 @@ export default function DevisEditorPage() {
           <Card style={{ marginBottom: 16 }}>
             <Descriptions title="Informations client" column={2} size="small">
               <Descriptions.Item label="Client">
-                {devis.clientNom || <Text type="secondary">Non détecté</Text>}
+                <Input
+                  value={clientNom}
+                  onChange={e => setClientNom(e.target.value)}
+                  placeholder="Non détecté — saisir manuellement"
+                  style={{ width: 220 }}
+                />
               </Descriptions.Item>
               <Descriptions.Item label="Email">
                 {devis.clientEmail
@@ -259,6 +290,14 @@ export default function DevisEditorPage() {
                 <Tag color={confidence >= 75 ? 'green' : confidence >= 50 ? 'orange' : 'red'}>
                   {confidence}%
                 </Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label="Date de livraison souhaitée">
+                <DatePicker
+                  value={deliveryDate}
+                  onChange={date => setDeliveryDate(date)}
+                  format="DD/MM/YYYY"
+                  placeholder="Non précisée"
+                />
               </Descriptions.Item>
               <Descriptions.Item label="Budget client">
                 {devis.clientBudget

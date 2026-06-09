@@ -4,6 +4,7 @@ import {
   Table, Tag, Button, Modal, Input, Typography,
   Space, message, Badge, Tooltip
 } from 'antd'
+import { SyncOutlined, MailOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import type { Devis } from '../types/api'
 
@@ -25,6 +26,7 @@ export default function InboxPage() {
   const [modalOpen, setModalOpen]   = useState(false)
   const [emailText, setEmailText]   = useState('')
   const [sending, setSending]       = useState(false)
+  const [scanning, setScanning]     = useState(false)
 
   const fetchDevis = () => {
     setLoading(true)
@@ -39,6 +41,20 @@ export default function InboxPage() {
   }
 
   useEffect(() => { fetchDevis() }, [])
+
+  const handleScanEmails = async () => {
+    setScanning(true)
+    try {
+      await fetch('/api/admin/scan-emails', { method: 'POST' })
+      await new Promise(r => setTimeout(r, 1500))
+      await fetchDevis()
+      message.success('Scan terminé — liste mise à jour')
+    } catch {
+      message.error('Erreur lors du scan')
+    } finally {
+      setScanning(false)
+    }
+  }
 
   const handleNouvelleDemanande = async () => {
     if (!emailText.trim()) {
@@ -131,9 +147,19 @@ export default function InboxPage() {
     <div style={{ padding: '24px' }}>
       <Space style={{ marginBottom: 20, width: '100%', justifyContent: 'space-between' }} align="center">
         <Title level={3} style={{ margin: 0 }}>Inbox — Demandes de devis</Title>
-        <Button type="primary" size="large" onClick={() => setModalOpen(true)}>
-          + Nouvelle demande
-        </Button>
+        <Space>
+          <Button
+            icon={<SyncOutlined spin={scanning} />}
+            size="large"
+            loading={scanning}
+            onClick={handleScanEmails}
+          >
+            Scanner les emails
+          </Button>
+          <Button type="default" size="large" icon={<MailOutlined />} onClick={() => setModalOpen(true)}>
+            Tester manuellement
+          </Button>
+        </Space>
       </Space>
 
       <Table<Devis>

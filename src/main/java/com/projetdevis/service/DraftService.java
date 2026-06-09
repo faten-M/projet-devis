@@ -557,16 +557,16 @@ public class DraftService {
             if (delta < 0) {
                 // Dépassement du budget
                 if (overrunPercent > BUDGET_OVERRUN_REJECTION_THRESHOLD) {
-                    // Dépassement MAJEUR (> 30%) → REJET automatique
-                    draft.setStatus(DraftQuote.DraftStatus.REJETE);
+                    // Dépassement MAJEUR (> 30%) → alerte pour le commercial (pas de rejet automatique)
                     draft.addInconsistency(String.format(
-                        "[MAJEURE] Dépassement de budget critique : %.0f%% au-dessus du budget client (%.0f € vs %.0f €)",
+                        "Budget dépassé de %.0f%% : total %.0f € pour un budget de %.0f € — à revoir avec le client",
                         overrunPercent, totalHT, budget
                     ));
                     draft.addWarning(String.format(
-                        "Devis rejeté automatiquement - Dépassement de %.2f € (%.0f%% > seuil de %.0f%%)",
-                        Math.abs(delta), overrunPercent, BUDGET_OVERRUN_REJECTION_THRESHOLD
+                        "Dépassement important : +%.2f € (%.0f%% au-dessus du budget client)",
+                        Math.abs(delta), overrunPercent
                     ));
+                    draft.addRequiredAction("Ajuster le devis pour respecter le budget client");
                 } else {
                     // Dépassement modéré → avertissement
                     draft.addWarning(String.format(

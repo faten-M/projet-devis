@@ -80,8 +80,11 @@ public class EmailReaderService {
 
     /**
      * Traite un seul email : extrait le texte, lance le pipeline, marque comme lu.
+     *
+     * Visibilité package-private (pas private) pour être testable directement
+     * depuis EmailReaderServiceTest sans avoir à mocker toute la connexion IMAP.
      */
-    private void traiterEmail(Message message) {
+    void traiterEmail(Message message) {
         try {
             String sujet = message.getSubject() != null ? message.getSubject() : "(sans sujet)";
             System.out.println("[EmailReader] Traitement : " + sujet);
@@ -107,7 +110,7 @@ public class EmailReaderService {
     /**
      * Extrait le contenu texte d'un email (supporte texte simple et multipart).
      */
-    private String extraireTexte(Message message) throws Exception {
+    String extraireTexte(Message message) throws Exception {
         Object content = message.getContent();
 
         if (content instanceof String texte) {
@@ -125,7 +128,7 @@ public class EmailReaderService {
      * Parcourt les parties d'un email multipart pour trouver le texte.
      * Cherche text/plain en priorité, puis text/html en dernier recours.
      */
-    private String extraireTexteMultipart(MimeMultipart multipart) throws Exception {
+    String extraireTexteMultipart(MimeMultipart multipart) throws Exception {
         String textePlain = null;
         String texteHtml  = null;
 

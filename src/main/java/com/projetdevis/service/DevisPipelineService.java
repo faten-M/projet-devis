@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -75,18 +76,25 @@ public class DevisPipelineService {
         List<ExtractInfoIA.ProductInfo> produits = ia.extractProductList(cleaned);
 
         // — Produits —
+        List<String> quantitesFloues = new ArrayList<>();
         for (ExtractInfoIA.ProductInfo p : produits) {
             if (p.nom() == null || p.nom().isBlank()) continue;
 
             ItemRequest item = new ItemRequest();
             item.setProduct(p.nom());
 
+            String qteRaw = p.quantite() != null && !p.quantite().isBlank() ? p.quantite() : "1";
             int qty = 1;
             try {
-                qty = ia.parseQuantity(p.quantite() != null && !p.quantite().isBlank()
-                        ? p.quantite() : "1");
+                qty = ia.parseQuantity(qteRaw);
             } catch (Exception ignored) {}
             item.setQuantity(qty);
+
+            // Détection quantité floue : si le texte original n'est pas un nombre exact
+            if (!qteRaw.trim().matches("\\d+")) {
+                quantitesFloues.add("\"" + p.nom() + "\" : quantité \"" + qteRaw
+                        + "\" interprétée comme " + qty + " — à confirmer avec le client");
+            }
 
             item.setUnite(p.unite());
 
@@ -94,9 +102,10 @@ public class DevisPipelineService {
                 item.addCharacteristic(p.details());
             }
 
-            item.setRawLine(p.nom() + " × " + p.quantite() + " " + p.unite());
+            item.setRawLine(p.nom() + " × " + qteRaw + " " + p.unite());
             info.addItem(item);
         }
+        info.setQuantitesFloues(quantitesFloues);
 
         // — Budget —
         if (meta.budgetMontant() != null) {
@@ -139,8 +148,10 @@ public class DevisPipelineService {
         String cleaned = cleanerService.clean(rawEmail);
 
         // Étape 2 — Extraction LLM : métadonnées + produits
+        // Les métadonnées (client, date, budget) sont extraites depuis l'email ORIGINAL
+        // car le cleaner supprime la signature (Cordialement, Nom Prénom).
         ExtractInfoIA ia = getExtractInfoIA();
-        ExtractInfoIA.MetadataInfo meta = ia.extractMetadata(cleaned);
+        ExtractInfoIA.MetadataInfo meta = ia.extractMetadata(rawEmail);
         ExtractedInfo extracted = buildExtractedInfo(cleaned, ia, meta);
 
         // Étape 3 — Analyse et classification
@@ -149,9 +160,14 @@ public class DevisPipelineService {
         // Étape 4 — Génération du devis brouillon
         DraftQuote draft = draftService.generateDraft(analyzed);
 
+        // Alertes quantités floues → recommandations pour le commercial
+        for (String alerte : extracted.getQuantitesFloues()) {
+            draft.addRecommendation("Quantité imprécise — " + alerte);
+        }
+
         // Étape 5 — Création ou récupération de la fiche client (déduplication par email)
         String nomClient   = meta.nomClient() != null && !meta.nomClient().isBlank()
-                             ? meta.nomClient() : "Prospect";
+                             ? meta.nomClient() : null;
         String emailClient = meta.emailClient() != null ? meta.emailClient().trim() : "";
 
         Client client = emailClient.isBlank()
@@ -201,8 +217,35 @@ public class DevisPipelineService {
             }
         }
 
-        // Remise globale sur toutes les lignes
-        if (req.getRemiseGlobale() != null && req.getRemiseGlobale() > 0) {
+        // Mise à jour des articles (désignation, quantité, prix, remise individuelle)
+        if (req.getItems() != null && !req.getItems().isEmpty()) {
+            java.util.Map<Integer, QuoteItem> byLine = new java.util.HashMap<>();
+            for (QuoteItem qi : draft.getItems()) byLine.put(qi.getLineNumber(), qi);
+
+            for (ValiderRequest.ItemUpdate u : req.getItems()) {
+                QuoteItem qi = byLine.get(u.getLineNumber());
+                if (qi == null) {
+                    // Nouvel article ajouté par le commercial
+                    qi = new QuoteItem();
+                    if (u.getLineNumber() != null) qi.setLineNumber(u.getLineNumber());
+                    draft.getItems().add(qi);
+                }
+                if (u.getDesignation()   != null) qi.setDesignation(u.getDesignation());
+                if (u.getQuantity()      != null) qi.setQuantity(u.getQuantity());
+                if (u.getUnitPriceHT()   != null) qi.setUnitPriceHT(u.getUnitPriceHT());
+                if (u.getDiscountPercent() != null) qi.setDiscountPercent(u.getDiscountPercent());
+            }
+            // Supprimer les articles qui ne sont plus dans la liste du commercial
+            java.util.Set<Integer> keptLines = new java.util.HashSet<>();
+            for (ValiderRequest.ItemUpdate u : req.getItems()) keptLines.add(u.getLineNumber());
+            draft.getItems().removeIf(qi -> !keptLines.contains(qi.getLineNumber()));
+
+            draft.recalculateTotals();
+        }
+
+        // Remise globale sur toutes les lignes (si pas d'articles individuels fournis)
+        if (req.getRemiseGlobale() != null && req.getRemiseGlobale() > 0
+                && (req.getItems() == null || req.getItems().isEmpty())) {
             for (QuoteItem item : draft.getItems()) {
                 item.setDiscountPercent(req.getRemiseGlobale());
             }
@@ -217,6 +260,26 @@ public class DevisPipelineService {
         // Commentaire du validateur → ajouté aux recommandations
         if (req.getCommentaire() != null && !req.getCommentaire().isBlank()) {
             draft.addRecommendation("Validateur : " + req.getCommentaire());
+        }
+
+        // Date de livraison corrigée manuellement
+        if (req.getDateLivraison() != null && !req.getDateLivraison().isBlank()) {
+            try {
+                draft.setRequestedDeliveryDate(LocalDate.parse(req.getDateLivraison()));
+                // Supprimer l'incohérence "date dans le passé" si elle existait
+                draft.getInconsistencies().removeIf(i -> i.contains("Date de livraison dans le passé"));
+            } catch (DateTimeParseException ignored) {}
+        }
+
+        // Nom client saisi manuellement par le commercial
+        if (req.getNomClient() != null && !req.getNomClient().isBlank()) {
+            draft.setClientNom(req.getNomClient().trim());
+            if (draft.getClientReference() != null) {
+                clientRepository.findById(draft.getClientReference()).ifPresent(c -> {
+                    c.setRaisonSociale(req.getNomClient().trim());
+                    clientRepository.save(c);
+                });
+            }
         }
 
         quoteRepository.save(draft);

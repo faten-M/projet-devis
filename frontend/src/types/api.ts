@@ -23,6 +23,7 @@ export interface Devis {
   totalTTC: number | null
   tvaRate: number
   clientBudget: number | null
+  requestedDeliveryDate: string | null
   confidence: number
   items: QuoteItem[]
   requiredActions: string[]

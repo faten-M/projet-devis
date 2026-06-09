@@ -76,7 +76,12 @@ public class ExtractInfoIA {
         + "  - date_livraison      : la date de livraison au format ISO YYYY-MM-DD. \"\" si absente.\n"
         + "  - date_livraison_brut : le texte brut de la date (ex: \"avant le 20 juin 2026\"). \"\" si absent.\n"
         + "  - urgence             : niveau d'urgence parmi \"normal\", \"urgent\", \"très urgent\", \"critique\".\n"
-        + "  - nom_client          : nom ou raison sociale de l'expéditeur (ex: \"Dupont BTP\"). \"\" si absent.\n"
+        + "  - nom_client          : nom complet ou raison sociale de l'expéditeur.\n"
+        + "                          Chercher dans tout l'e-mail : corps, signature, et SURTOUT\n"
+        + "                          après les formules de politesse comme 'Cordialement,', \n"
+        + "                          'Bien cordialement,', 'Sincèrement,', 'Bonne journée,'.\n"
+        + "                          Exemples : 'Jean Martin', 'M. Karim Benali', 'Dupont BTP'.\n"
+        + "                          \"\" si aucun nom trouvé nulle part.\n"
         + "  - email_client        : adresse email de l'expéditeur si présente dans l'e-mail. \"\" si absente.\n\n"
         + "Règles :\n"
         + "  - Ne pas extraire les produits (traités séparément).\n"
@@ -319,9 +324,15 @@ public class ExtractInfoIA {
                         .build())
                 .build();
 
+        // Injecter l'année courante pour que le LLM ne devine pas l'année
+        // quand l'email dit "avant le 15 juillet" sans préciser l'année.
+        String metadataPrompt = METADATA_SYSTEM_PROMPT
+                + "\n  - Année en cours : " + java.time.Year.now().getValue()
+                + " — pour toute date sans année explicite, utiliser cette année par défaut.";
+
         ChatCompletionCreateParams params = ChatCompletionCreateParams.builder()
                 .model(MODEL)
-                .addSystemMessage(METADATA_SYSTEM_PROMPT)
+                .addSystemMessage(metadataPrompt)
                 .addUserMessage("Voici l'e-mail à analyser :\n\n" + email)
                 .responseFormat(responseFormat)
                 .build();

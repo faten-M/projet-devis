@@ -56,6 +56,9 @@ public class ExtractedInfo {
     /** Notes ou contraintes additionnelles extraites */
     private List<String> additionalNotes;
 
+    /** Produits dont la quantité était floue (ex: "quelques", "plusieurs") */
+    private List<String> quantitesFloues;
+
     /** Texte source utilisé pour l'extraction */
     private String sourceText;
 
@@ -71,6 +74,7 @@ public class ExtractedInfo {
     public ExtractedInfo() {
         this.items = new ArrayList<>();
         this.additionalNotes = new ArrayList<>();
+        this.quantitesFloues = new ArrayList<>();
         this.confidence = 0.0;
     }
 
@@ -186,6 +190,14 @@ public class ExtractedInfo {
 
     public void setConfidence(double confidence) {
         this.confidence = Math.max(0.0, Math.min(1.0, confidence));
+    }
+
+    public List<String> getQuantitesFloues() {
+        return quantitesFloues;
+    }
+
+    public void setQuantitesFloues(List<String> quantitesFloues) {
+        this.quantitesFloues = quantitesFloues != null ? quantitesFloues : new ArrayList<>();
     }
 
     // === MÉTHODES UTILITAIRES ===
