@@ -82,8 +82,10 @@ export default function DevisEditorPage() {
   }
 
   const addItem = () => {
-    setItems(prev => [...prev, {
-      lineNumber: prev.length + 1,
+    setItems(prev => {
+      const maxLine = prev.reduce((max, it) => Math.max(max, it.lineNumber ?? 0), 0)
+      return [...prev, {
+      lineNumber: maxLine + 1,
       designation: 'Nouvel article',
       quantity: 1,
       unitPriceHT: 0,
@@ -91,7 +93,8 @@ export default function DevisEditorPage() {
       totalPriceHT: 0,
       category: 'AUTRE',
       status: 'PRICING_OK',
-    }])
+    }]
+    })
   }
 
   const sauvegarder = async () => {
