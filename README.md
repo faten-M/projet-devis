@@ -111,6 +111,22 @@ L'application est disponible sur `http://localhost:5173`
 
 ---
 
+## Déploiement (Railway)
+
+L'application se déploie sur [Railway](https://railway.app) en tant que service unique (Spring Boot sert à la fois l'API et le frontend React compilé).
+
+**Variables d'environnement à configurer dans Railway :**
+
+| Variable | Description |
+|----------|-------------|
+| `OPENAI_API_KEY` | Clé API OpenAI |
+| `EMAIL_IMAP_ENABLED` | `true` pour activer le scan automatique |
+| `EMAIL_USERNAME` | Adresse Gmail |
+| `EMAIL_PASSWORD` | App Password Gmail |
+| `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, `PGPASSWORD` | Fournis automatiquement par Railway si tu ajoutes un service PostgreSQL |
+
+---
+
 ## Tests
 
 ```bash

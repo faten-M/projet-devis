@@ -159,7 +159,7 @@ sophie.arnaud@renovation13.fr
 > "Quand le commercial change une quantité ou un prix, le système enregistre l'écart entre ce que l'IA avait proposé et ce que le commercial a mis. Ça me permet d'afficher un taux de précision et d'identifier les types d'erreurs récurrentes."
 
 **"Pourquoi H2 et pas PostgreSQL ?"**
-> "H2 pour simplifier le développement local. En production, on brancherait PostgreSQL — la migration est transparente avec Spring Data JPA, il suffit de changer la config."
+> "H2 en local pour simplifier le développement — pas besoin d'installer une base. En production sur Railway, l'application tourne avec PostgreSQL. La migration s'est faite en changeant uniquement la config Spring Boot, sans toucher une seule ligne de code métier — c'est l'avantage de Spring Data JPA."
 
 **"Tu as combien de tests ?"**
 > "77 tests automatisés qui passent — tests unitaires sur les services, tests d'intégration JPA sur les repositories, tests MockMvc sur les controllers."
