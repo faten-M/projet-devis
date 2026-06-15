@@ -162,7 +162,7 @@ sophie.arnaud@renovation13.fr
 > "H2 en local pour simplifier le développement — pas besoin d'installer une base. En production sur Railway, l'application tourne avec PostgreSQL. La migration s'est faite en changeant uniquement la config Spring Boot, sans toucher une seule ligne de code métier — c'est l'avantage de Spring Data JPA."
 
 **"Tu as combien de tests ?"**
-> "77 tests automatisés qui passent — tests unitaires sur les services, tests d'intégration JPA sur les repositories, tests MockMvc sur les controllers."
+> "64 tests backend automatisés — 39 unitaires sur les services avec Mockito, 10 d'intégration JPA avec @DataJpaTest, 15 controllers avec @WebMvcTest et MockMvc. Plus des tests frontend avec Vitest."
 
 ---
 

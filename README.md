@@ -130,7 +130,7 @@ L'application se déploie sur [Railway](https://railway.app) en tant que service
 ## Tests
 
 ```bash
-mvn test          # 77 tests backend
+mvn test          # 64 tests backend (39 unitaires + 10 intégration + 15 controllers)
 cd frontend && npm run test   # tests frontend
 ```
 
@@ -163,7 +163,7 @@ Ce projet m'a permis de :
 - Construire une **API REST complète** avec Spring Boot et documenter automatiquement avec Swagger
 - Créer une **interface React/TypeScript** professionnelle avec Ant Design
 - Mettre en place un **feedback loop** pour mesurer et améliorer la qualité des extractions IA
-- Appliquer les bonnes pratiques : tests unitaires (77 tests), variables d'environnement pour les secrets, séparation des responsabilités
+- Appliquer les bonnes pratiques : tests unitaires (64 tests backend), variables d'environnement pour les secrets, séparation des responsabilités
 
 ---
 
