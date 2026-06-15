@@ -146,7 +146,14 @@ public class ExtractionService {
         "panneau", "panneaux", "tiroir", "tiroirs", "bibliothèque", "bibliothèques"
     );
 
-    private final ExtractInfoIA quantityIA = new ExtractInfoIA();
+    private ExtractInfoIA quantityIA;
+
+    private ExtractInfoIA getQuantityIA() {
+        if (quantityIA == null) {
+            quantityIA = new ExtractInfoIA();
+        }
+        return quantityIA;
+    }
 
     public ExtractedInfo extract(String cleanedEmail) {
         ExtractedInfo info = new ExtractedInfo(cleanedEmail);
@@ -203,7 +210,7 @@ public class ExtractionService {
                     } else {
                         // pas de nombre explicite, utiliser l'IA pour interpréter les quantités humaines
                         try {
-                            Integer q = quantityIA.parseQuantity(trimmedLine);
+                            Integer q = getQuantityIA().parseQuantity(trimmedLine);
                             if (q != null) {
                                 item.setQuantity(q);
                             }
@@ -241,7 +248,7 @@ public class ExtractionService {
 
                     if (quantityStr != null) {
                         try {
-                            item.setQuantity(quantityIA.parseQuantity(quantityStr));
+                            item.setQuantity(getQuantityIA().parseQuantity(quantityStr));
                         } catch (Exception ignored) {}
                     } else {
                         // pas de quantité numérique, on interprète la ligne entière
@@ -250,7 +257,7 @@ public class ExtractionService {
                         if (lineEnd == -1) lineEnd = text.length();
                         String line = text.substring(lineStart, lineEnd).trim();
                         try {
-                            Integer q = quantityIA.parseQuantity(line);
+                            Integer q = getQuantityIA().parseQuantity(line);
                             if (q != null) {
                                 item.setQuantity(q);
                             }
@@ -287,7 +294,7 @@ public class ExtractionService {
                 Integer quantity = null;
                 if (qtyMatcher.find()) {
                     try {
-                        quantity = quantityIA.parseQuantity(qtyMatcher.group(1));
+                        quantity = getQuantityIA().parseQuantity(qtyMatcher.group(1));
                     } catch (Exception ignored) {}
                 }
 
@@ -322,7 +329,7 @@ public class ExtractionService {
         try {
             for (String expr : HUMAN_QUANTITY_PHRASES) {
                 if (text.toLowerCase().contains(expr)) {
-                    return quantityIA.parseQuantity(expr);
+                    return getQuantityIA().parseQuantity(expr);
                 }
             }
         } catch (Exception ignored) {}

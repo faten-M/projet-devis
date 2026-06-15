@@ -184,9 +184,9 @@ public class App {
         """;
 
     /**
-     * Point d'entrée principal.
+     * Script de test Phase 1 — à appeler manuellement pour tester le pipeline sans Spring Boot.
      */
-    public static void main(String[] args) {
+    public static void runTests(String[] args) {
         System.out.println("╔══════════════════════════════════════════════════════════════════════╗");
         System.out.println("║                 TEST FINAL DU PIPELINE BMAD COMPLET                  ║");
         System.out.println("║   Étapes : Nettoyage → Extraction → Analyse → Devis → Valid → CRM   ║");
