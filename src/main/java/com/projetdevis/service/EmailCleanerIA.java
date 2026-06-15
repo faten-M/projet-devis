@@ -71,14 +71,9 @@ public class EmailCleanerIA {
      */
     public EmailCleanerIA() {
         String apiKey = System.getenv("OPENAI_API_KEY");
-        if (apiKey == null || apiKey.isBlank()) {
-            throw new IllegalStateException(
-                "Variable d'environnement OPENAI_API_KEY manquante ou vide."
-            );
-        }
-        this.client = OpenAIOkHttpClient.builder()
-                .apiKey(apiKey)
-                .build();
+        this.client = (apiKey != null && !apiKey.isBlank())
+                ? OpenAIOkHttpClient.builder().apiKey(apiKey).build()
+                : null;
     }
 
     /**
@@ -112,6 +107,9 @@ public class EmailCleanerIA {
         // Cas limites : null, vide, blanc
         if (email == null || email.isBlank()) {
             return "";
+        }
+        if (client == null) {
+            return email;
         }
 
         // Construction du prompt utilisateur
