@@ -180,6 +180,10 @@ public class PdfService {
         addLigneRecap(table, "Total HT", fmt(devis.getTotalHT()), fontLabel, fontValeur, Color.WHITE);
         addLigneRecap(table, "TVA (" + (int) devis.getTvaRate() + "%)", fmt(devis.getTotalTVA()), fontLabel, fontValeur, Color.WHITE);
 
+        if (devis.isDeliveryIncluded() && devis.getDeliveryFees() != null && devis.getDeliveryFees() > 0) {
+            addLigneRecap(table, "Frais de livraison TTC", fmt(devis.getDeliveryFees()), fontLabel, fontValeur, Color.WHITE);
+        }
+
         PdfPCell labelTTC = new PdfPCell(new Phrase("Total TTC", fontTotal));
         labelTTC.setBackgroundColor(BLEU_BTP);
         labelTTC.setPadding(8);
@@ -215,14 +219,8 @@ public class PdfService {
             doc.add(p);
         }
 
-        // Livraison
-        if (devis.isDeliveryIncluded() && devis.getDeliveryFees() != null && devis.getDeliveryFees() > 0) {
-            Paragraph p = new Paragraph();
-            p.add(new Chunk("Frais de livraison : ", fontLabel));
-            p.add(new Chunk(String.format("%.2f € TTC", devis.getDeliveryFees()), fontValeur));
-            p.setSpacingAfter(4);
-            doc.add(p);
-        } else if (!devis.isDeliveryIncluded()) {
+        // Mode de livraison
+        if (!devis.isDeliveryIncluded()) {
             Paragraph p = new Paragraph();
             p.add(new Chunk("Mode de livraison : ", fontLabel));
             p.add(new Chunk("Retrait en entreprise", fontValeur));

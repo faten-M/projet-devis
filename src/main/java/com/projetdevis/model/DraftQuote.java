@@ -731,13 +731,13 @@ public class DraftQuote {
         this.totalDiscount = discounts;
         this.totalHT = brutHT - discounts;
 
-        // Ajout des frais de livraison si non inclus
-        if (!deliveryIncluded && deliveryFees != null) {
-            this.totalHT += deliveryFees;
-        }
-
         this.totalTVA = totalHT * (tvaRate / 100);
         this.totalTTC = totalHT + totalTVA;
+
+        // Les frais de livraison sont saisis TTC → ajoutés au TTC final (pas au HT)
+        if (deliveryIncluded && deliveryFees != null && deliveryFees > 0) {
+            this.totalTTC += deliveryFees;
+        }
 
         updateBudgetAnalysis();
         markModified();
