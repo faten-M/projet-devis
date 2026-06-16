@@ -20,6 +20,9 @@ const devisFixture: Devis = {
   tvaRate: 20,
   clientBudget: null,
   requestedDeliveryDate: null,
+  deliveryFees: null,
+  deliveryIncluded: false,
+  warranty: null,
   confidence: 85,
   items: [
     {
