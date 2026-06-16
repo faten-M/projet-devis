@@ -227,28 +227,33 @@ public class DevisPipelineService {
             java.util.Map<Integer, QuoteItem> byLine = new java.util.HashMap<>();
             for (QuoteItem qi : draft.getItems()) byLine.put(qi.getLineNumber(), qi);
 
-            // Enregistrement des corrections IA (avant la mise à jour)
-            for (ValiderRequest.ItemUpdate u : req.getItems()) {
-                QuoteItem existing = byLine.get(u.getLineNumber());
-                if (existing == null) continue;
-                if (u.getQuantity() != null && u.getQuantity() != existing.getQuantity()) {
-                    correctionRepository.save(correction(quoteNumber, u.getLineNumber(),
-                        CorrectionIA.ChampCorrige.QUANTITE,
-                        String.valueOf(existing.getQuantity()),
-                        String.valueOf(u.getQuantity())));
-                }
-                if (u.getUnitPriceHT() != null && existing.getUnitPriceHT() != null
-                        && !u.getUnitPriceHT().equals(existing.getUnitPriceHT())) {
-                    correctionRepository.save(correction(quoteNumber, u.getLineNumber(),
-                        CorrectionIA.ChampCorrige.PRIX_UNITAIRE,
-                        String.format("%.2f", existing.getUnitPriceHT()),
-                        String.format("%.2f", u.getUnitPriceHT())));
-                }
-                if (u.getDesignation() != null && !u.getDesignation().equals(existing.getDesignation())) {
-                    correctionRepository.save(correction(quoteNumber, u.getLineNumber(),
-                        CorrectionIA.ChampCorrige.DESIGNATION,
-                        existing.getDesignation(),
-                        u.getDesignation()));
+            // Corrections IA enregistrées uniquement lors d'une validation finale (PRET ou REJETE)
+            // Sauvegarder = brouillon en cours, pas une correction définitive
+            boolean isFinalValidation = "PRET".equalsIgnoreCase(req.getStatut())
+                                     || "REJETE".equalsIgnoreCase(req.getStatut());
+            if (isFinalValidation) {
+                for (ValiderRequest.ItemUpdate u : req.getItems()) {
+                    QuoteItem existing = byLine.get(u.getLineNumber());
+                    if (existing == null) continue;
+                    if (u.getQuantity() != null && u.getQuantity() != existing.getQuantity()) {
+                        correctionRepository.save(correction(quoteNumber, u.getLineNumber(),
+                            CorrectionIA.ChampCorrige.QUANTITE,
+                            String.valueOf(existing.getQuantity()),
+                            String.valueOf(u.getQuantity())));
+                    }
+                    if (u.getUnitPriceHT() != null && existing.getUnitPriceHT() != null
+                            && !u.getUnitPriceHT().equals(existing.getUnitPriceHT())) {
+                        correctionRepository.save(correction(quoteNumber, u.getLineNumber(),
+                            CorrectionIA.ChampCorrige.PRIX_UNITAIRE,
+                            String.format("%.2f", existing.getUnitPriceHT()),
+                            String.format("%.2f", u.getUnitPriceHT())));
+                    }
+                    if (u.getDesignation() != null && !u.getDesignation().equals(existing.getDesignation())) {
+                        correctionRepository.save(correction(quoteNumber, u.getLineNumber(),
+                            CorrectionIA.ChampCorrige.DESIGNATION,
+                            existing.getDesignation(),
+                            u.getDesignation()));
+                    }
                 }
             }
 
