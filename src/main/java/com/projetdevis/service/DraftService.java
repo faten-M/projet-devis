@@ -683,8 +683,10 @@ public class DraftService {
      * Détermine les actions requises avant finalisation.
      */
     private void determineRequiredActions(DraftQuote draft) {
-        // Articles incomplets
-        List<QuoteItem> incompleteItems = draft.getIncompleteItems();
+        // Articles avec statut A_COMPLETER (A_VALIDER = déjà prêt pour validation, pas une action requise)
+        List<QuoteItem> incompleteItems = draft.getItems().stream()
+                .filter(item -> item.getStatus() == QuoteItem.LineStatus.A_COMPLETER)
+                .collect(java.util.stream.Collectors.toList());
         if (!incompleteItems.isEmpty()) {
             draft.addRequiredAction(String.format(
                 "Compléter les informations de %d article(s)",
