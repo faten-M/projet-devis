@@ -329,6 +329,20 @@ public class DevisPipelineService {
             draft.setSubject(req.getSujetBesoin().trim());
         }
 
+        // Mode de livraison et frais
+        if (req.getDeliveryIncluded() != null) {
+            draft.setDeliveryIncluded(req.getDeliveryIncluded());
+        }
+        if (req.getDeliveryFees() != null) {
+            draft.setDeliveryFees(req.getDeliveryFees() > 0 ? req.getDeliveryFees() : null);
+            draft.recalculateTotals();
+        }
+
+        // Garantie
+        if (req.getWarranty() != null) {
+            draft.setWarranty(req.getWarranty().isBlank() ? null : req.getWarranty().trim());
+        }
+
         quoteRepository.save(draft);
         return draft;
     }

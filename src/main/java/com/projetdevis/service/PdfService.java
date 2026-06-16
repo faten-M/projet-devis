@@ -215,6 +215,30 @@ public class PdfService {
             doc.add(p);
         }
 
+        // Livraison
+        if (devis.isDeliveryIncluded() && devis.getDeliveryFees() != null && devis.getDeliveryFees() > 0) {
+            Paragraph p = new Paragraph();
+            p.add(new Chunk("Frais de livraison : ", fontLabel));
+            p.add(new Chunk(String.format("%.2f € TTC", devis.getDeliveryFees()), fontValeur));
+            p.setSpacingAfter(4);
+            doc.add(p);
+        } else if (!devis.isDeliveryIncluded()) {
+            Paragraph p = new Paragraph();
+            p.add(new Chunk("Mode de livraison : ", fontLabel));
+            p.add(new Chunk("Retrait en entreprise", fontValeur));
+            p.setSpacingAfter(4);
+            doc.add(p);
+        }
+
+        // Garantie
+        if (devis.getWarranty() != null && !devis.getWarranty().isBlank()) {
+            Paragraph p = new Paragraph();
+            p.add(new Chunk("Garantie : ", fontLabel));
+            p.add(new Chunk(devis.getWarranty(), fontValeur));
+            p.setSpacingAfter(4);
+            doc.add(p);
+        }
+
         if (devis.getValidUntil() != null) {
             Paragraph p = new Paragraph();
             p.add(new Chunk("Validité de l'offre : ", fontLabel));

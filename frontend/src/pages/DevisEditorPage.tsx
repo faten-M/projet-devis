@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import {
   Card, Row, Col, Table, InputNumber, Button, Tag, Alert,
   Typography, Space, Statistic, Modal, Input, Select,
-  message, Spin, Descriptions, List, Collapse, DatePicker
+  message, Spin, Descriptions, List, Collapse, DatePicker, Switch
 } from 'antd'
 import dayjs from 'dayjs'
 import { MailOutlined } from '@ant-design/icons'
@@ -40,7 +40,10 @@ export default function DevisEditorPage() {
   const [priorite, setPriorite]         = useState<string>('')
   const [budgetClient, setBudgetClient] = useState<number | null>(null)
   const [sujetBesoin, setSujetBesoin]   = useState<string>('')
-  const [deliveryDate, setDeliveryDate] = useState<dayjs.Dayjs | null>(null)
+  const [deliveryDate, setDeliveryDate]         = useState<dayjs.Dayjs | null>(null)
+  const [deliveryIncluded, setDeliveryIncluded] = useState<boolean>(false)
+  const [deliveryFees, setDeliveryFees]         = useState<number | null>(null)
+  const [warranty, setWarranty]                 = useState<string>('')
 
   useEffect(() => {
     fetch(`/api/devis/${quoteNumber}`)
@@ -53,6 +56,9 @@ export default function DevisEditorPage() {
         setBudgetClient(data.clientBudget ?? null)
         setSujetBesoin(data.subject ?? '')
         setDeliveryDate(data.requestedDeliveryDate ? dayjs(data.requestedDeliveryDate) : null)
+        setDeliveryIncluded(data.deliveryIncluded ?? false)
+        setDeliveryFees(data.deliveryFees ?? null)
+        setWarranty(data.warranty ?? '')
       })
       .catch(() => message.error('Impossible de charger le devis'))
       .finally(() => setLoading(false))
@@ -109,6 +115,9 @@ export default function DevisEditorPage() {
           budgetClient: budgetClient,
           sujetBesoin: sujetBesoin.trim() || null,
           dateLivraison: deliveryDate ? deliveryDate.format('YYYY-MM-DD') : null,
+          deliveryIncluded: deliveryIncluded,
+          deliveryFees: deliveryIncluded ? (deliveryFees ?? 0) : null,
+          warranty: warranty.trim() || null,
           items: items.map((it, idx) => ({
             lineNumber:      it.lineNumber ?? idx + 1,
             designation:     it.designation,
@@ -145,6 +154,9 @@ export default function DevisEditorPage() {
           budgetClient: budgetClient,
           sujetBesoin: sujetBesoin.trim() || null,
           dateLivraison: deliveryDate ? deliveryDate.format('YYYY-MM-DD') : null,
+          deliveryIncluded: deliveryIncluded,
+          deliveryFees: deliveryIncluded ? (deliveryFees ?? 0) : null,
+          warranty: warranty.trim() || null,
           items: items.map((it, idx) => ({
             lineNumber:      it.lineNumber ?? idx + 1,
             designation:     it.designation,
@@ -405,6 +417,43 @@ export default function DevisEditorPage() {
                   placeholder="Ex : 30 jours net, virement bancaire"
                   value={conditions}
                   onChange={e => setConditions(e.target.value)}
+                  style={{ marginTop: 4 }}
+                />
+              </Col>
+            </Row>
+            <Row gutter={16} style={{ marginTop: 12 }}>
+              <Col span={24}>
+                <Text>Mode de livraison</Text>
+                <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <Switch
+                    checked={deliveryIncluded}
+                    onChange={val => {
+                      setDeliveryIncluded(val)
+                      if (!val) setDeliveryFees(null)
+                    }}
+                    checkedChildren="Livraison"
+                    unCheckedChildren="Retrait en entreprise"
+                  />
+                  {deliveryIncluded && (
+                    <InputNumber
+                      min={0}
+                      value={deliveryFees}
+                      onChange={val => setDeliveryFees(val)}
+                      placeholder="Frais de livraison"
+                      addonAfter="€ TTC"
+                      style={{ width: 200 }}
+                    />
+                  )}
+                </div>
+              </Col>
+            </Row>
+            <Row gutter={16} style={{ marginTop: 12 }}>
+              <Col span={24}>
+                <Text>Garantie</Text>
+                <Input
+                  placeholder="Ex : 2 ans pièces et main d'œuvre"
+                  value={warranty}
+                  onChange={e => setWarranty(e.target.value)}
                   style={{ marginTop: 4 }}
                 />
               </Col>

@@ -38,6 +38,15 @@ public class ValiderRequest {
     /** Date de livraison corrigée manuellement (format ISO : YYYY-MM-DD) */
     private String dateLivraison;
 
+    /** Frais de livraison (null = pas de livraison, retrait en entreprise) */
+    private Double deliveryFees;
+
+    /** true = livraison à domicile, false = retrait en entreprise */
+    private Boolean deliveryIncluded;
+
+    /** Garantie proposée (ex : "2 ans pièces et main d'œuvre") */
+    private String warranty;
+
     /** Articles mis à jour par le commercial (liste complète) */
     private java.util.List<ItemUpdate> items;
 
@@ -91,4 +100,13 @@ public class ValiderRequest {
 
     public java.util.List<ItemUpdate> getItems() { return items; }
     public void setItems(java.util.List<ItemUpdate> items) { this.items = items; }
+
+    public Double  getDeliveryFees()    { return deliveryFees; }
+    public void    setDeliveryFees(Double v) { this.deliveryFees = v; }
+
+    public Boolean getDeliveryIncluded() { return deliveryIncluded; }
+    public void    setDeliveryIncluded(Boolean v) { this.deliveryIncluded = v; }
+
+    public String  getWarranty()        { return warranty; }
+    public void    setWarranty(String v) { this.warranty = v; }
 }

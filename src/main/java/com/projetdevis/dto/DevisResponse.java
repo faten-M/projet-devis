@@ -36,6 +36,11 @@ public class DevisResponse {
 
     // --- Livraison ---
     private LocalDate requestedDeliveryDate;
+    private Double    deliveryFees;
+    private boolean   deliveryIncluded;
+
+    // --- Garantie & conditions ---
+    private String warranty;
 
     // --- Qualité ---
     private int confidence;
@@ -112,6 +117,9 @@ public class DevisResponse {
         r.budgetRespected = draft.isBudgetRespected();
 
         r.requestedDeliveryDate = draft.getRequestedDeliveryDate();
+        r.deliveryFees          = draft.getDeliveryFees();
+        r.deliveryIncluded      = draft.isDeliveryIncluded();
+        r.warranty              = draft.getWarranty();
 
         r.confidence       = (int) Math.round(draft.getConfidence() * 100);
         r.requiredActions  = draft.getRequiredActions();
@@ -146,6 +154,9 @@ public class DevisResponse {
     public Double        getClientBudget()         { return clientBudget; }
     public Boolean       isBudgetRespected()       { return budgetRespected; }
     public LocalDate     getRequestedDeliveryDate(){ return requestedDeliveryDate; }
+    public Double        getDeliveryFees()         { return deliveryFees; }
+    public boolean       isDeliveryIncluded()      { return deliveryIncluded; }
+    public String        getWarranty()             { return warranty; }
     public int           getConfidence()           { return confidence; }
     public List<String>  getRequiredActions()      { return requiredActions; }
     public List<String>  getRecommendations()      { return recommendations; }

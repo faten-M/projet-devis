@@ -24,6 +24,9 @@ export interface Devis {
   tvaRate: number
   clientBudget: number | null
   requestedDeliveryDate: string | null
+  deliveryFees: number | null
+  deliveryIncluded: boolean
+  warranty: string | null
   confidence: number
   items: QuoteItem[]
   requiredActions: string[]

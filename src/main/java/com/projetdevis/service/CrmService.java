@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 
 /**
  * Service d'intégration CRM.
- *
  * Ce service gère :
  * 1. Création et mise à jour des fiches clients
  * 2. Enregistrement des devis validés dans le CRM
