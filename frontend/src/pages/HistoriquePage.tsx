@@ -161,6 +161,23 @@ function HistoriqueTab() {
 
 // ─── Onglet Clients ───────────────────────────────────────────────────────────
 
+const STATUS_OPTS = [
+  { value: 'ACTIF',    label: 'Actif' },
+  { value: 'INACTIF',  label: 'Inactif' },
+  { value: 'BLOQUE',   label: 'Bloqué' },
+  { value: 'ARCHIVE',  label: 'Archivé' },
+]
+
+const SEGMENT_OPTS = [
+  { value: 'PROSPECT',       label: 'Prospect' },
+  { value: 'TPE',            label: 'TPE' },
+  { value: 'PME',            label: 'PME' },
+  { value: 'ETI',            label: 'ETI' },
+  { value: 'GRAND_COMPTE',   label: 'Grand compte' },
+  { value: 'ADMINISTRATION', label: 'Administration' },
+  { value: 'ASSOCIATION',    label: 'Association' },
+]
+
 function ClientsTab() {
   const navigate = useNavigate()
   const [clients, setClients] = useState<Client[]>([])
@@ -173,6 +190,20 @@ function ClientsTab() {
       .catch(() => message.error('Impossible de charger les clients'))
       .finally(() => setLoading(false))
   }, [])
+
+  const updateClient = (clientId: string, field: string, value: string) => {
+    fetch(`/api/clients/${clientId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ [field]: value }),
+    })
+      .then(r => r.json())
+      .then((updated: Client) => {
+        setClients(prev => prev.map(c => c.clientId === clientId ? updated : c))
+        message.success('Mis à jour')
+      })
+      .catch(() => message.error('Erreur lors de la mise à jour'))
+  }
 
   const columns: ColumnsType<Client> = [
     {
@@ -192,15 +223,31 @@ function ClientsTab() {
       title: 'Segment',
       dataIndex: 'segment',
       key: 'segment',
-      render: (v: string | null) => v ? <Tag>{v}</Tag> : '—',
+      render: (v: string | null, record: Client) => (
+        <Select
+          value={SEGMENT_OPTS.find(o => o.label === v)?.value}
+          options={SEGMENT_OPTS}
+          size="small"
+          style={{ width: 140 }}
+          placeholder="—"
+          onChange={val => updateClient(record.clientId, 'segment', val)}
+        />
+      ),
     },
     {
       title: 'Statut',
       dataIndex: 'status',
       key: 'status',
-      render: (v: string | null) => v
-        ? <Tag color={v === 'Actif' ? 'green' : v === 'Bloqué' ? 'red' : 'default'}>{v}</Tag>
-        : '—',
+      render: (v: string | null, record: Client) => (
+        <Select
+          value={STATUS_OPTS.find(o => o.label === v)?.value}
+          options={STATUS_OPTS}
+          size="small"
+          style={{ width: 110 }}
+          placeholder="—"
+          onChange={val => updateClient(record.clientId, 'status', val)}
+        />
+      ),
     },
     {
       title: 'Nb devis',

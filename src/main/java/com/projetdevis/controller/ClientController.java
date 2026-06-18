@@ -1,6 +1,7 @@
 package com.projetdevis.controller;
 
 import com.projetdevis.dto.ClientResponse;
+import com.projetdevis.model.Client;
 import com.projetdevis.repository.ClientRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -9,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Tag(name = "Clients", description = "Consultation des fiches clients extraites des e-mails")
@@ -40,5 +42,24 @@ public class ClientController {
                 .map(ClientResponse::from)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @Operation(summary = "Modifier le statut ou le segment d'un client")
+    @PatchMapping("/{clientId}")
+    public ResponseEntity<?> updateClient(
+            @PathVariable String clientId,
+            @RequestBody Map<String, String> body) {
+        return clientRepository.findById(clientId).map(client -> {
+            if (body.containsKey("status")) {
+                try { client.setStatus(Client.Status.valueOf(body.get("status"))); }
+                catch (IllegalArgumentException ignored) {}
+            }
+            if (body.containsKey("segment")) {
+                try { client.setSegment(Client.Segment.valueOf(body.get("segment"))); }
+                catch (IllegalArgumentException ignored) {}
+            }
+            clientRepository.save(client);
+            return ResponseEntity.ok(ClientResponse.from(client));
+        }).orElse(ResponseEntity.notFound().build());
     }
 }
