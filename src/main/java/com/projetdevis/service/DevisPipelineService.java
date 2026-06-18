@@ -182,6 +182,14 @@ public class DevisPipelineService {
 
         client.setSourceOrigine("EMAIL");
         client.setEmailOrigine(emailClient.isBlank() ? null : emailClient);
+        // Appliquer le segment détecté par l'IA si le client est encore PROSPECT
+        String segmentDetecte = meta.segmentClient();
+        if (segmentDetecte != null && !segmentDetecte.isBlank()
+                && client.getSegment() == com.projetdevis.model.Client.Segment.PROSPECT) {
+            try {
+                client.setSegment(com.projetdevis.model.Client.Segment.valueOf(segmentDetecte));
+            } catch (IllegalArgumentException ignored) {}
+        }
         if (!client.getHistoriqueDevis().contains(draft.getQuoteNumber())) {
             client.getHistoriqueDevis().add(draft.getQuoteNumber());
         }

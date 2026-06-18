@@ -82,7 +82,14 @@ public class ExtractInfoIA {
         + "                          'Bien cordialement,', 'Sincèrement,', 'Bonne journée,'.\n"
         + "                          Exemples : 'Jean Martin', 'M. Karim Benali', 'Dupont BTP'.\n"
         + "                          \"\" si aucun nom trouvé nulle part.\n"
-        + "  - email_client        : adresse email de l'expéditeur si présente dans l'e-mail. \"\" si absente.\n\n"
+        + "  - email_client        : adresse email de l'expéditeur si présente dans l'e-mail. \"\" si absente.\n"
+        + "  - segment_client      : segment de l'entreprise déduit du contexte de l'e-mail.\n"
+        + "                          Valeurs possibles UNIQUEMENT : \"TPE\", \"PME\", \"ETI\",\n"
+        + "                          \"GRAND_COMPTE\", \"ADMINISTRATION\", \"ASSOCIATION\", \"\" si non détectable.\n"
+        + "                          Exemples : 'notre association' → \"ASSOCIATION\",\n"
+        + "                          'mairie', 'commune', 'conseil départemental' → \"ADMINISTRATION\",\n"
+        + "                          'notre PME' → \"PME\", 'grand groupe', 'filiale' → \"GRAND_COMPTE\".\n"
+        + "                          \"\" si l'e-mail ne donne aucun indice sur la taille ou le type.\n\n"
         + "Règles :\n"
         + "  - Ne pas extraire les produits (traités séparément).\n"
         + "  - Retourner UNIQUEMENT le JSON, sans texte avant ni après, sans markdown.";
@@ -275,7 +282,7 @@ public class ExtractInfoIA {
      */
     public record ProductInfo(String nom, String quantite, String unite, String details) {}
 
-    /** Métadonnées extraites de l'e-mail (budget, date, urgence, client). */
+    /** Métadonnées extraites de l'e-mail (budget, date, urgence, client, segment). */
     public record MetadataInfo(
             Double budgetMontant,
             String budgetUnite,
@@ -284,7 +291,8 @@ public class ExtractInfoIA {
             String dateLivraisonBrut,
             String urgence,
             String nomClient,
-            String emailClient) {}
+            String emailClient,
+            String segmentClient) {}
 
     /**
      * Extrait les métadonnées de l'e-mail via le LLM : budget, date de livraison, urgence.
@@ -294,7 +302,7 @@ public class ExtractInfoIA {
      */
     public MetadataInfo extractMetadata(String email) {
         if (email == null || email.isBlank()) {
-            return new MetadataInfo(null, "", "", "", "", "normal", "", "");
+            return new MetadataInfo(null, "", "", "", "", "normal", "", "", "");
         }
 
         ObjectNode properties = objectMapper.createObjectNode();
@@ -306,6 +314,7 @@ public class ExtractInfoIA {
         properties.putObject("urgence").put("type", "string");
         properties.putObject("nom_client").put("type", "string");
         properties.putObject("email_client").put("type", "string");
+        properties.putObject("segment_client").put("type", "string");
 
         ResponseFormatJsonSchema responseFormat = ResponseFormatJsonSchema.builder()
                 .jsonSchema(ResponseFormatJsonSchema.JsonSchema.builder()
@@ -317,7 +326,7 @@ public class ExtractInfoIA {
                                 .putAdditionalProperty("required", com.openai.core.JsonValue.from(List.of(
                                         "budget_montant", "budget_unite", "budget_brut",
                                         "date_livraison", "date_livraison_brut", "urgence",
-                                        "nom_client", "email_client")))
+                                        "nom_client", "email_client", "segment_client")))
                                 .putAdditionalProperty("additionalProperties", com.openai.core.JsonValue.from(false))
                                 .build())
                         .strict(true)
@@ -351,15 +360,16 @@ public class ExtractInfoIA {
             String dateLiv    = root.path("date_livraison").asText("").trim();
             String dateLivBrut = root.path("date_livraison_brut").asText("").trim();
             String urgence    = root.path("urgence").asText("normal").trim();
-            String nomClient  = root.path("nom_client").asText("").trim();
-            String emailClient = root.path("email_client").asText("").trim();
+            String nomClient     = root.path("nom_client").asText("").trim();
+            String emailClient   = root.path("email_client").asText("").trim();
+            String segmentClient = root.path("segment_client").asText("").trim();
 
             return new MetadataInfo(montant, unite, budgetBrut, dateLiv, dateLivBrut,
-                                    urgence, nomClient, emailClient);
+                                    urgence, nomClient, emailClient, segmentClient);
 
         } catch (Exception e) {
             System.err.println("[ExtractInfoIA] Erreur extraction métadonnées : " + e.getMessage());
-            return new MetadataInfo(null, "", "", "", "", "normal", "", "");
+            return new MetadataInfo(null, "", "", "", "", "normal", "", "", "");
         }
     }
 
