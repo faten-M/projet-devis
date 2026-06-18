@@ -84,8 +84,8 @@ export default function DashboardPage() {
   const tempsMoyen = mins < 60
     ? `${Math.round(mins)} min`
     : mins < 1440
-    ? `${(mins / 60).toFixed(1)} h`
-    : `${(mins / 1440).toFixed(1)} j`
+    ? `${Math.floor(mins / 60)}h ${Math.round(mins % 60)}min`
+    : `${Math.floor(mins / 1440)}j ${Math.floor((mins % 1440) / 60)}h`
 
   return (
     <div style={{ padding: 24 }}>
