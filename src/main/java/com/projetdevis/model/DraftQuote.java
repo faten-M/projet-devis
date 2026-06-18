@@ -287,7 +287,7 @@ public class DraftQuote {
     public DraftQuote() {
         this.createdAt = LocalDateTime.now();
         this.modifiedAt = LocalDateTime.now();
-        this.validityDays = 30;
+        this.validityDays = 1;
         this.validUntil = LocalDate.now().plusDays(validityDays);
         this.status = DraftStatus.BROUILLON;
         this.priority = Priority.NORMALE;
