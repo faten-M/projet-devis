@@ -1,3 +1,6 @@
 target/
 .claude/
 _bmad/
+.env
+.env.local
+.env.*

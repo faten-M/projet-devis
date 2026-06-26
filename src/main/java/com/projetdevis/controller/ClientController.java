@@ -3,6 +3,7 @@ package com.projetdevis.controller;
 import com.projetdevis.dto.ClientResponse;
 import com.projetdevis.model.Client;
 import com.projetdevis.repository.ClientRepository;
+import com.projetdevis.repository.DraftQuoteRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -18,10 +19,13 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/clients")
 public class ClientController {
 
-    private final ClientRepository clientRepository;
+    private final ClientRepository     clientRepository;
+    private final DraftQuoteRepository quoteRepository;
 
-    public ClientController(ClientRepository clientRepository) {
+    public ClientController(ClientRepository clientRepository,
+                            DraftQuoteRepository quoteRepository) {
         this.clientRepository = clientRepository;
+        this.quoteRepository  = quoteRepository;
     }
 
     @Operation(summary = "Liste tous les clients", description = "Retourne tous les clients créés automatiquement lors du traitement des e-mails.")
@@ -42,6 +46,34 @@ public class ClientController {
                 .map(ClientResponse::from)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @Operation(
+        summary = "Effacement RGPD (Art. 17)",
+        description = "Anonymise les données personnelles du client et de ses devis associés. L'enregistrement est conservé pour l'intégrité comptable mais toutes les données identifiantes sont supprimées."
+    )
+    @DeleteMapping("/{clientId}")
+    public ResponseEntity<?> deleteClientData(@PathVariable String clientId) {
+        return clientRepository.findById(clientId).map(client -> {
+            client.setRaisonSociale("Client anonymisé");
+            client.setNomCommercial(null);
+            client.setEmailOrigine(null);
+            client.setTelephone(null);
+            client.setSiret(null);
+            client.setNumeroTva(null);
+            client.setCodeApe(null);
+            client.getNotes().clear();
+            client.setStatus(Client.Status.ARCHIVE);
+            clientRepository.save(client);
+
+            quoteRepository.findByClientReference(clientId).forEach(draft -> {
+                draft.setClientNom("Client anonymisé");
+                draft.setClientEmail(null);
+                quoteRepository.save(draft);
+            });
+
+            return ResponseEntity.ok(Map.of("message", "Données personnelles effacées (RGPD Art. 17)"));
+        }).orElse(ResponseEntity.notFound().build());
     }
 
     @Operation(summary = "Modifier le statut ou le segment d'un client")

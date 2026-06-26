@@ -362,8 +362,7 @@ public class CrmService {
             client.setAdresseSiege(adresse);
         }
 
-        client.setEmailOrigine(emailContent.length() > 500 ?
-            emailContent.substring(0, 500) + "..." : emailContent);
+        client.setEmailOrigine(email);
 
         saveClient(client);
         return client;
@@ -428,10 +427,6 @@ public class CrmService {
 
         // Création de l'enregistrement
         CrmRecord record = createRecord(validatedQuote, client);
-
-        // Ajout de l'email d'origine comme référence
-        record.setCustomField("originalEmail", originalEmail.length() > 200 ?
-            originalEmail.substring(0, 200) + "..." : originalEmail);
 
         return record;
     }

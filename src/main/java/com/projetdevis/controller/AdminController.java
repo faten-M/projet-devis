@@ -49,6 +49,7 @@ public class AdminController {
         if (!quoteRepository.existsById(quoteNumber)) {
             return ResponseEntity.notFound().build();
         }
+        correctionRepository.deleteByQuoteNumber(quoteNumber);
         quoteRepository.deleteById(quoteNumber);
         return ResponseEntity.ok(Map.of(
             "status", "supprimé",

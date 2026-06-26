@@ -4,6 +4,8 @@ import com.projetdevis.model.DraftQuote;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 /**
  * Repository Spring Data JPA pour la persistance des devis brouillons.
  *
@@ -12,4 +14,6 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface DraftQuoteRepository extends JpaRepository<DraftQuote, String> {
+
+    List<DraftQuote> findByClientReference(String clientId);
 }

@@ -10,4 +10,5 @@ import java.util.List;
 public interface CorrectionIARepository extends JpaRepository<CorrectionIA, Long> {
     List<CorrectionIA> findAllByOrderByCreatedAtDesc();
     long countByChamp(CorrectionIA.ChampCorrige champ);
+    void deleteByQuoteNumber(String quoteNumber);
 }

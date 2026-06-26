@@ -2,7 +2,6 @@ package com.projetdevis.service;
 
 import com.projetdevis.dto.ValiderRequest;
 import com.projetdevis.model.AnalyzedInfo;
-import com.projetdevis.model.Client;
 import com.projetdevis.model.CorrectionIA;
 import com.projetdevis.model.DraftQuote;
 import com.projetdevis.model.ExtractedInfo;
@@ -20,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Service Spring orchestrant le pipeline de génération de devis :
@@ -31,12 +31,13 @@ import java.util.Optional;
 @Service
 public class DevisPipelineService {
 
-    private final EmailCleanerIA          cleanerService;
-    private final AnalysisService         analysisService;
-    private final DraftService            draftService;
-    private final DraftQuoteRepository    quoteRepository;
-    private final ClientRepository        clientRepository;
-    private final CorrectionIARepository  correctionRepository;
+    private final EmailCleanerIA           cleanerService;
+    private final AnalysisService          analysisService;
+    private final DraftService             draftService;
+    private final DraftQuoteRepository     quoteRepository;
+    private final ClientRepository         clientRepository;
+    private final CorrectionIARepository   correctionRepository;
+    private final DevisPersistenceService  persistenceService;
 
     // ExtractInfoIA créé à la demande : nécessite OPENAI_API_KEY au runtime.
     private ExtractInfoIA extractInfoIA;
@@ -46,13 +47,15 @@ public class DevisPipelineService {
                                 DraftService draftService,
                                 DraftQuoteRepository quoteRepository,
                                 ClientRepository clientRepository,
-                                CorrectionIARepository correctionRepository) {
+                                CorrectionIARepository correctionRepository,
+                                DevisPersistenceService persistenceService) {
         this.cleanerService       = cleanerService;
         this.analysisService      = analysisService;
         this.draftService         = draftService;
         this.quoteRepository      = quoteRepository;
         this.clientRepository     = clientRepository;
         this.correctionRepository = correctionRepository;
+        this.persistenceService   = persistenceService;
     }
 
     private ExtractInfoIA getExtractInfoIA() {
@@ -147,22 +150,26 @@ public class DevisPipelineService {
      * @return devis brouillon généré
      * @throws IllegalStateException si la variable d'environnement OPENAI_API_KEY est absente
      */
-    @Transactional
     public DraftQuote process(String rawEmail) {
-        // Étape 1 — Nettoyage
-        String cleaned = cleanerService.clean(rawEmail);
-
-        // Étape 2 — Extraction LLM : métadonnées + produits
-        // Les métadonnées (client, date, budget) sont extraites depuis l'email ORIGINAL
-        // car le cleaner supprime la signature (Cordialement, Nom Prénom).
         ExtractInfoIA ia = getExtractInfoIA();
-        ExtractInfoIA.MetadataInfo meta = ia.extractMetadata(rawEmail);
+
+        // Étape 1+2 — Nettoyage ET extraction des métadonnées en PARALLÈLE
+        // extractMetadata utilise rawEmail directement → pas besoin d'attendre le cleaner
+        CompletableFuture<String> cleanedFuture =
+            CompletableFuture.supplyAsync(() -> cleanerService.clean(rawEmail));
+        CompletableFuture<ExtractInfoIA.MetadataInfo> metaFuture =
+            CompletableFuture.supplyAsync(() -> ia.extractMetadata(rawEmail));
+
+        String cleaned = cleanedFuture.join();
+        ExtractInfoIA.MetadataInfo meta = metaFuture.join();
+
+        // Étape 3 — Extraction des produits (nécessite cleaned, donc après)
         ExtractedInfo extracted = buildExtractedInfo(cleaned, ia, meta);
 
-        // Étape 3 — Analyse et classification
+        // Étape 3 — Analyse et classification (logique Java, pas de transaction DB)
         AnalyzedInfo analyzed = analysisService.analyze(extracted);
 
-        // Étape 4 — Génération du devis brouillon
+        // Étape 4 — Génération du devis brouillon (logique Java, pas de transaction DB)
         DraftQuote draft = draftService.generateDraft(analyzed);
 
         // Alertes quantités floues → recommandations pour le commercial
@@ -170,39 +177,10 @@ public class DevisPipelineService {
             draft.addRecommendation("Quantité imprécise — " + alerte);
         }
 
-        // Étape 5 — Création ou récupération de la fiche client (déduplication par email)
-        String nomClient   = meta.nomClient() != null && !meta.nomClient().isBlank()
-                             ? meta.nomClient() : null;
+        // Étape 5 — Sauvegarde en DB dans une vraie transaction (service séparé = proxy Spring actif)
+        String nomClient   = meta.nomClient() != null && !meta.nomClient().isBlank() ? meta.nomClient() : null;
         String emailClient = meta.emailClient() != null ? meta.emailClient().trim() : "";
-
-        Client client = emailClient.isBlank()
-                ? new Client(nomClient)
-                : clientRepository.findByEmailOrigine(emailClient)
-                                  .orElseGet(() -> new Client(nomClient));
-
-        client.setSourceOrigine("EMAIL");
-        client.setEmailOrigine(emailClient.isBlank() ? null : emailClient);
-        // Appliquer le segment détecté par l'IA si le client est encore PROSPECT
-        String segmentDetecte = meta.segmentClient();
-        if (segmentDetecte != null && !segmentDetecte.isBlank()
-                && client.getSegment() == com.projetdevis.model.Client.Segment.PROSPECT) {
-            try {
-                client.setSegment(com.projetdevis.model.Client.Segment.valueOf(segmentDetecte));
-            } catch (IllegalArgumentException ignored) {}
-        }
-        if (!client.getHistoriqueDevis().contains(draft.getQuoteNumber())) {
-            client.getHistoriqueDevis().add(draft.getQuoteNumber());
-        }
-        clientRepository.save(client);
-        draft.setClientReference(client.getClientId());
-        draft.setClientNom(client.getRaisonSociale());
-        draft.setClientEmail(client.getEmailOrigine());
-        draft.setEmailOriginal(rawEmail);
-
-        // Étape 6 — Sauvegarde du devis en base de données
-        quoteRepository.save(draft);
-
-        return draft;
+        return persistenceService.saveDevisWithClient(draft, nomClient, emailClient, meta.segmentClient());
     }
 
     /**

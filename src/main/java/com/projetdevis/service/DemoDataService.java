@@ -41,10 +41,6 @@ public class DemoDataService {
         DraftQuote d1 = devis("DEV-20260501-1001", LocalDateTime.now().minusDays(5), c1,
             "Commande ciment et parpaings — chantier résidentiel",
             DraftQuote.DraftStatus.PRET, DraftQuote.Priority.NORMALE, 0.87,
-            "Bonjour,\n\nNous avons besoin de matériaux pour un chantier résidentiel.\n" +
-            "Pourriez-vous nous fournir 120 sacs de ciment CEM II 32,5 et 500 parpaings creux 20x20x50 ?\n" +
-            "Livraison souhaitée la semaine prochaine si possible.\n\n" +
-            "Cordialement,\nM. Dupont\nSARL Dupont Construction",
             List.of(),
             List.of("Volume important — inclure la livraison dans le devis", "Négocier remise fournisseur 5%"),
             List.of(),
@@ -65,10 +61,6 @@ public class DemoDataService {
         DraftQuote d2 = devis("DEV-20260502-1002", LocalDateTime.now().minusDays(3), c2,
             "Fourniture fer à béton HA16 et sable de carrière",
             DraftQuote.DraftStatus.BROUILLON, DraftQuote.Priority.HAUTE, 0.72,
-            "Bonjour,\n\nJe suis chef de chantier chez BTP Martin & Fils.\n" +
-            "Nous avons besoin de :\n- 80 barres de fer à béton HA16 (6m)\n" +
-            "- 10 big bags de sable de carrière 0/4\n- 8 big bags de gravier concassé 8/15\n\n" +
-            "C'est urgent, nous commençons les fondations lundi.\n\nMartin",
             List.of("Compléter les informations de livraison", "Vérifier disponibilité stock HA16"),
             List.of("Commander avant vendredi pour livraison semaine prochaine"),
             List.of("Quantité de sable à confirmer avec le client"),
@@ -90,10 +82,6 @@ public class DemoDataService {
         DraftQuote d3 = devis("DEV-20260503-1003", LocalDateTime.now().minusDays(2), c3,
             "Carrelage sol + isolant murs — appartement 80 m²",
             DraftQuote.DraftStatus.A_COMPLETER, DraftQuote.Priority.NORMALE, 0.61,
-            "Salut,\n\nJ'ai un appartement de 80m² à rénover.\n" +
-            "Je voudrais du carrelage grès cérame beige 60x60 pour le sol (environ 100m²),\n" +
-            "de la colle flex C2 et de l'isolant laine de verre 100mm pour les murs.\n" +
-            "La couleur exacte du carrelage est à confirmer.\n\nKhalid",
             List.of("Préciser la couleur du carrelage", "Confirmer surface exacte à isoler"),
             List.of("Prévoir joint de carrelage assorti", "Inclure l'outillage de pose"),
             List.of("Surface carrelage incohérente avec surface isolant"),
@@ -115,10 +103,6 @@ public class DemoDataService {
         DraftQuote d4 = devis("DEV-20260503-1004", LocalDateTime.now().minusDays(1), c4,
             "Couverture tuiles + charpente — maison individuelle",
             DraftQuote.DraftStatus.PRET, DraftQuote.Priority.HAUTE, 0.91,
-            "Bonjour,\n\nNous réalisons la toiture d'une maison individuelle.\n" +
-            "Besoin de 350 tuiles terre cuite rouge 17x27, 40 chevrons sapin 63x75mm en 4m,\n" +
-            "et 2 rouleaux de sous-toiture respirante 150m².\n" +
-            "Client fidèle depuis 5 ans.\n\nBernard SAS",
             List.of(),
             List.of("Client fidèle — proposer remise 3%", "Prévoir livraison en deux fois"),
             List.of(),
@@ -140,12 +124,6 @@ public class DemoDataService {
         DraftQuote d5 = devis("DEV-20260504-1005", LocalDateTime.now().minusHours(6), c5,
             "Installation électrique complète — local commercial 200 m²",
             DraftQuote.DraftStatus.BROUILLON, DraftQuote.Priority.URGENTE, 0.78,
-            "Bonjour,\n\nNous ouvrons un local commercial de 200m² et avons besoin de :\n" +
-            "- 5 rouleaux câble électrique 2,5mm² (100m chacun)\n" +
-            "- 1 tableau électrique 36 modules\n" +
-            "- 3 rouleaux gaine ICTA 3320 (100m)\n" +
-            "- 10 lots de prises 2P+T encastrables\n\n" +
-            "Ouverture prévue dans 3 semaines, c'est urgent !\n\nConstructions Modernes",
             List.of("Vérifier la puissance du disjoncteur principal"),
             List.of("Commande urgente — contacter fournisseur dès aujourd'hui"),
             List.of(),
@@ -168,9 +146,6 @@ public class DemoDataService {
         DraftQuote d6 = devis("DEV-20260504-1006", LocalDateTime.now().minusHours(2), c6,
             "Fourniture plomberie sanitaires — immeuble 12 logements",
             DraftQuote.DraftStatus.REJETE, DraftQuote.Priority.BASSE, 0.55,
-            "Bonjour,\n\nPour la rénovation d'un immeuble de 12 logements,\n" +
-            "nous avons besoin de 24 barres de tube cuivre 16/18 (5m) et 60 raccords compression laiton 16mm.\n" +
-            "Notre budget est de 500€ maximum.\n\nLegrand Plomberie",
             List.of(),
             List.of(),
             List.of("Budget client dépassé : 859 € demandé pour un budget de 500 €"),
@@ -188,7 +163,6 @@ public class DemoDataService {
     private DraftQuote devis(String numero, LocalDateTime createdAt, Client client,
                               String subject, DraftQuote.DraftStatus status,
                               DraftQuote.Priority priority, double confidence,
-                              String emailOriginal,
                               List<String> requiredActions,
                               List<String> recommendations,
                               List<String> inconsistencies,
@@ -205,7 +179,6 @@ public class DemoDataService {
         d.setClientReference(client.getClientId());
         d.setClientNom(client.getRaisonSociale());
         d.setClientEmail(client.getEmailOrigine());
-        d.setEmailOriginal(emailOriginal);
         d.setTvaRate(20.0);
         d.setItems(items);
         d.setRequiredActions(requiredActions);
