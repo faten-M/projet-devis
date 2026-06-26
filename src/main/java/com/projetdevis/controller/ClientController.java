@@ -69,6 +69,7 @@ public class ClientController {
             quoteRepository.findByClientReference(clientId).forEach(draft -> {
                 draft.setClientNom("Client anonymisé");
                 draft.setClientEmail(null);
+                draft.setEmailOriginal(null);
                 quoteRepository.save(draft);
             });
 
