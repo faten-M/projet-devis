@@ -177,6 +177,9 @@ public class DevisPipelineService {
             draft.addRecommendation("Quantité imprécise — " + alerte);
         }
 
+        // Corps de l'email conservé 30 jours pour vérification commerciale (purgé automatiquement ensuite)
+        draft.setEmailOriginal(rawEmail);
+
         // Étape 5 — Sauvegarde en DB dans une vraie transaction (service séparé = proxy Spring actif)
         String nomClient   = meta.nomClient() != null && !meta.nomClient().isBlank() ? meta.nomClient() : null;
         String emailClient = meta.emailClient() != null ? meta.emailClient().trim() : "";

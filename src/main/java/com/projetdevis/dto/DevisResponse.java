@@ -24,6 +24,7 @@ public class DevisResponse {
     private String subject;
     private String clientNom;
     private String clientEmail;
+    private String emailOriginal;
 
     // --- Financier ---
     private Double totalHT;
@@ -106,6 +107,7 @@ public class DevisResponse {
         r.subject        = draft.getSubject();
         r.clientNom      = draft.getClientNom();
         r.clientEmail    = draft.getClientEmail();
+        r.emailOriginal  = draft.getEmailOriginal();
 
         r.totalHT        = draft.getTotalHT();
         r.totalTVA       = draft.getTotalTVA();
@@ -144,6 +146,7 @@ public class DevisResponse {
     public String        getSubject()              { return subject; }
     public String        getClientNom()            { return clientNom; }
     public String        getClientEmail()          { return clientEmail; }
+    public String        getEmailOriginal()        { return emailOriginal; }
     public Double        getTotalHT()              { return totalHT; }
     public Double        getTotalTVA()             { return totalTVA; }
     public double        getTvaRate()              { return tvaRate; }

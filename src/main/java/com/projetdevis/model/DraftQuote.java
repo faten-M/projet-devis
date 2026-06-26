@@ -117,6 +117,13 @@ public class DraftQuote {
     /** Email du client (copié au moment de la création pour affichage) */
     private String clientEmail;
 
+    /** Corps brut de l'email — conservé 30 jours puis purgé automatiquement (RGPD Art. 5.1.e) */
+    @Column(columnDefinition = "TEXT")
+    private String emailOriginal;
+
+    /** Date d'expiration de la rétention de l'email (createdAt + 30 jours) */
+    private LocalDateTime emailRetentionExpiry;
+
     /** Statut du brouillon */
     @Enumerated(EnumType.STRING)
     private DraftStatus status;
@@ -396,6 +403,15 @@ public class DraftQuote {
 
     public String getClientEmail() { return clientEmail; }
     public void setClientEmail(String clientEmail) { this.clientEmail = clientEmail; }
+
+    public String getEmailOriginal() { return emailOriginal; }
+    public void setEmailOriginal(String emailOriginal) {
+        this.emailOriginal = emailOriginal;
+        this.emailRetentionExpiry = emailOriginal != null
+            ? LocalDateTime.now().plusDays(30) : null;
+    }
+
+    public LocalDateTime getEmailRetentionExpiry() { return emailRetentionExpiry; }
 
     public DraftStatus getStatus() {
         return status;
