@@ -110,6 +110,10 @@ public class DevisController {
             @PathVariable String quoteNumber) {
         return pipelineService.findByQuoteNumber(quoteNumber)
                 .map(devis -> {
+                    if (devis.getStatus() != DraftQuote.DraftStatus.PRET) {
+                        return ResponseEntity.status(403)
+                                .<byte[]>body(null);
+                    }
                     byte[] pdf = pdfService.genererPdfDevis(devis);
                     return ResponseEntity.ok()
                             .header(HttpHeaders.CONTENT_DISPOSITION,
