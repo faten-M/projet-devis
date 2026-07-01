@@ -560,7 +560,20 @@ export default function DevisEditorPage() {
             <Button
               size="large"
               icon={<FilePdfOutlined />}
-              onClick={() => window.open(`/api/devis/${quoteNumber}/pdf`, '_blank')}
+              onClick={async () => {
+                const res = await fetch(`/api/devis/${quoteNumber}/pdf`)
+                if (res.status === 403) {
+                  message.warning('Validez le devis avant de télécharger le PDF.')
+                  return
+                }
+                const blob = await res.blob()
+                const url = URL.createObjectURL(blob)
+                const a = document.createElement('a')
+                a.href = url
+                a.download = `devis-${quoteNumber}.pdf`
+                a.click()
+                URL.revokeObjectURL(url)
+              }}
             >
               Télécharger le PDF
             </Button>
