@@ -333,11 +333,13 @@ public class ExtractInfoIA {
                         .build())
                 .build();
 
-        // Injecter l'année courante pour que le LLM ne devine pas l'année
-        // quand l'email dit "avant le 15 juillet" sans préciser l'année.
+        // Injecter la date du jour pour que le LLM calcule correctement les dates relatives
+        // ("lundi", "semaine prochaine", "dans 3 jours"...)
         String metadataPrompt = METADATA_SYSTEM_PROMPT
-                + "\n  - Année en cours : " + java.time.Year.now().getValue()
-                + " — pour toute date sans année explicite, utiliser cette année par défaut.";
+                + "\n  - Date du jour : " + java.time.LocalDate.now().toString()
+                + " — pour toute date relative (lundi, mardi, semaine prochaine...), calculer"
+                + " la prochaine occurrence à partir de cette date."
+                + " Pour toute date sans année explicite, utiliser l'année en cours.";
 
         ChatCompletionCreateParams params = ChatCompletionCreateParams.builder()
                 .model(MODEL)
