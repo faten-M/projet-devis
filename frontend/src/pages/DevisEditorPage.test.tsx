@@ -67,9 +67,9 @@ describe('DevisEditorPage', () => {
     renderEditor()
 
     await waitFor(() => {
-      expect(screen.getByText('Martin Travaux')).toBeInTheDocument()
+      expect(screen.getByDisplayValue('Martin Travaux')).toBeInTheDocument()
       expect(screen.getByText('martin@btp.fr')).toBeInTheDocument()
-      expect(screen.getByText('Ciment CEM II')).toBeInTheDocument()
+      expect(screen.getByDisplayValue('Ciment CEM II')).toBeInTheDocument()
     })
   })
 
@@ -93,9 +93,10 @@ describe('DevisEditorPage', () => {
     })
   })
 
-  it('le bouton PDF ouvre /api/devis/{quoteNumber}/pdf dans un nouvel onglet', async () => {
-    vi.mocked(fetch).mockResolvedValueOnce({ ok: true, json: async () => devisFixture } as Response)
-    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
+  it('le bouton PDF appelle /api/devis/{quoteNumber}/pdf', async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce({ ok: true, json: async () => devisFixture } as Response)
+      .mockResolvedValueOnce({ ok: true, status: 200, blob: async () => new Blob() } as unknown as Response)
 
     const user = userEvent.setup()
     renderEditor()
@@ -103,8 +104,10 @@ describe('DevisEditorPage', () => {
     await waitFor(() => screen.getByText('Télécharger le PDF'))
     await user.click(screen.getByText('Télécharger le PDF'))
 
-    expect(openSpy).toHaveBeenCalledWith('/api/devis/DEV-2026-001/pdf', '_blank')
-    openSpy.mockRestore()
+    await waitFor(() => {
+      const calls = vi.mocked(fetch).mock.calls
+      expect(calls[1][0]).toBe('/api/devis/DEV-2026-001/pdf')
+    })
   })
 
   it('affiche une alerte "Devis expiré" si validUntil est dans le passé', async () => {

@@ -91,7 +91,7 @@ describe('DashboardPage', () => {
     renderDashboard()
 
     await waitFor(() => {
-      expect(screen.getByText('1.5 h')).toBeInTheDocument()
+      expect(screen.getByText('1h 30min')).toBeInTheDocument()
     })
   })
 
@@ -104,7 +104,7 @@ describe('DashboardPage', () => {
     renderDashboard()
 
     await waitFor(() => {
-      expect(screen.getByText('3.0 j')).toBeInTheDocument()
+      expect(screen.getByText('3j 0h')).toBeInTheDocument()
     })
   })
 

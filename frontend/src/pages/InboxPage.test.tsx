@@ -83,9 +83,9 @@ describe('InboxPage', () => {
     } as Response)
 
     renderInbox()
-    await waitFor(() => screen.getByText('+ Nouvelle demande'))
+    await waitFor(() => screen.getByText('Tester manuellement'))
 
-    await user.click(screen.getByText('+ Nouvelle demande'))
+    await user.click(screen.getByText('Tester manuellement'))
     await user.click(screen.getByText('Générer le devis'))
 
     // Seul le GET initial doit avoir été appelé, pas de POST
